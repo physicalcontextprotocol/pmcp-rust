@@ -1,0 +1,43 @@
+[package]
+name = "pmcp-ledger"
+version = "0.5.0"
+edition = "2021"
+description = "P-MCP Distributed Digital Twin Ledger with 4D CRDT"
+
+[dependencies]
+tokio = { version = "1.35", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+uuid = { version = "1.6", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+thiserror = "1.0"
+async-trait = "0.1"
+tracing = "0.1"
+tracing-subscriber = "0.3"
+parking_lot = "0.12"
+bytes = "1.5"
+
+[dependencies.redis]
+version = "0.25"
+# `scripting` is not a feature of redis 0.25 — the Lua-scripting feature is
+# named `script`. Cargo refused to resolve the dependency at all because of
+# the typo, so `cargo build`/`cargo test` failed before compiling anything.
+features = ["tokio-comp", "connection-manager", "script"]
+
+[dependencies.rusqlite]
+version = "0.31"
+features = ["bundled"]
+
+[dependencies.etcd-client]
+version = "0.13"
+
+[dev-dependencies]
+tokio-test = "0.4"
+
+[lib]
+name = "pmcp_ledger"
+path = "src/lib.rs"
+
+[[bin]]
+name = "pmcp-ledger"
+path = "src/main.rs"

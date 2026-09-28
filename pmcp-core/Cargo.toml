@@ -1,0 +1,51 @@
+[package]
+name = "pmcp-core"
+version = "0.5.0"
+edition = "2021"
+description = "P-MCP Core - Physical Model Context Protocol Rust implementation"
+authors = ["P-MCP Contributors"]
+license = "Apache-2.0"
+repository = "https://github.com/physicalcontextprotocol/pmcp-rust"
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+uuid = { version = "1.6", features = ["v4"] }
+chrono = { version = "0.4", features = ["serde"] }
+tokio = { version = "1", features = ["full"] }
+tracing = "0.1"
+tracing-subscriber = "0.3"
+thiserror = "1.0"
+async-trait = "0.1"
+bytes = "1.5"
+sha2 = "0.10"
+rand = "0.8"
+ed25519-dalek = { version = "2.0", features = ["rand_core"] }
+hex = "0.4"
+
+[lib]
+name = "pmcp_core"
+# `cdylib` is only useful when built as a Python extension via the
+# `python` feature; `rlib` is the standard Rust library form and covers
+# every other consumer.
+crate-type = ["cdylib", "rlib"]
+
+# pyo3 is optional: it is only pulled in (with the extension-module
+# linker configuration) when the `python` feature is enabled. This
+# means a plain `cargo build` no longer needs a Python interpreter
+# available at build time, and `src/python.rs` (gated on
+# `#[cfg(feature = "python")]`) is only compiled when the caller asks
+# for the Python-extension build.
+[dependencies.pyo3]
+version = "0.20"
+optional = true
+
+[features]
+default = ["std"]
+std = []
+python = ["dep:pyo3", "pyo3/extension-module"]
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
