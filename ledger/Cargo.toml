@@ -1,6 +1,6 @@
 [package]
 name = "pmcp-ledger"
-version = "0.5.0"
+version = "1.0.0"
 edition = "2021"
 description = "P-MCP Distributed Digital Twin Ledger with 4D CRDT"
 

@@ -1,6 +1,6 @@
 [package]
 name = "pmcp-core"
-version = "0.5.0"
+version = "1.0.0"
 edition = "2021"
 description = "P-MCP Core - Physical Model Context Protocol Rust implementation"
 authors = ["P-MCP Contributors"]
