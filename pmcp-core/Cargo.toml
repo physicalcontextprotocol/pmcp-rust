@@ -1,5 +1,5 @@
 [package]
-name = "pmcp-core"
+name = "physicalcontextprotocol"
 version = "1.0.0"
 edition = "2021"
 description = "P-MCP Core - Physical Model Context Protocol Rust implementation"
@@ -24,7 +24,7 @@ ed25519-dalek = { version = "2.0", features = ["rand_core"] }
 hex = "0.4"
 
 [lib]
-name = "pmcp_core"
+name = "physicalcontextprotocol"
 # `cdylib` is only useful when built as a Python extension via the
 # `python` feature; `rlib` is the standard Rust library form and covers
 # every other consumer.
