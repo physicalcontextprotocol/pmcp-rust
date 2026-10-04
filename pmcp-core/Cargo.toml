@@ -6,6 +6,7 @@ description = "P-MCP Core - Physical Model Context Protocol Rust implementation"
 authors = ["P-MCP Contributors"]
 license = "Apache-2.0"
 repository = "https://github.com/physicalcontextprotocol/pmcp-rust"
+readme = "README.md"
 
 [dependencies]
 serde = { version = "1.0", features = ["derive"] }
