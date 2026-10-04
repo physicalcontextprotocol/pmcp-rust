@@ -1,4 +1,4 @@
-//! P-MCP Workflow Engine
+//! PCP Workflow Engine
 //!
 //! Orchestrates multi-step robot missions with:
 // - Sequential and parallel steps

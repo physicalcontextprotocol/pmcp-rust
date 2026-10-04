@@ -1,12 +1,12 @@
 # pmcp-rust
 
-Rust implementation of the P-MCP protocol, split across two
+Rust implementation of the PCP protocol, split across two
 independent crates:
 
-- `pmcp-core/` — protocol core: consensus (Raft), identity, safety,
+- `pcp-core/` — protocol core: consensus (Raft), identity, safety,
   transport, networking, plugin system, rate limiting, telemetry, and
   optional Python bindings (`python.rs`).
-- `ledger/` (`pmcp-ledger`) — CRDT ledger layer: state, sync,
+- `ledger/` (`pcp-ledger`) — CRDT ledger layer: state, sync,
   partitioning, storage, RPC/API surface.
 
 This is a **peer** implementation of the same wire format as
@@ -16,18 +16,18 @@ This is a **peer** implementation of the same wire format as
 
 | Crate | Builds? | Tests | Supported? |
 |---|---|---|---|
-| `pmcp-core` | yes | **43 pass, 0 fail** | best-effort |
-| `pmcp-ledger` | **no** — 19 compile errors | not runnable | no |
+| `pcp-core` | yes | **43 pass, 0 fail** | best-effort |
+| `pcp-ledger` | **no** — 19 compile errors | not runnable | no |
 
-Both crates contain real implementations, not stubs. `pmcp-core/src/lib.rs`
+Both crates contain real implementations, not stubs. `pcp-core/src/lib.rs`
 declares 18 public modules; `ledger/src/lib.rs` declares 6. Combined
 that is roughly 350 KB of Rust source with ~66 embedded `#[test]`
 unit tests.
 
-## pmcp-core — builds and tests clean
+## pcp-core — builds and tests clean
 
 ```bash
-cd pmcp-core
+cd pcp-core
 cargo build --release
 cargo test                    # 43 passed; 0 failed
 ```
@@ -67,7 +67,7 @@ enforces this: the `core-build` job greps `Cargo.toml` and fails if
 `crate-type = ["cdylib", "rlib"]` is fine — the `cdylib` only matters
 for the `python` feature, and `rlib` covers every other consumer.
 
-## pmcp-ledger — does not compile
+## pcp-ledger — does not compile
 
 `cargo build` fails with 19 type errors in the CRDT layer:
 
@@ -96,11 +96,11 @@ declared and explained rather than hidden behind `|| true`.
 
 ## Open structural questions
 
-- **No workspace `Cargo.toml`.** `pmcp-core` and `ledger` are two
+- **No workspace `Cargo.toml`.** `pcp-core` and `ledger` are two
   independent crates with independent versions and independent
   `Cargo.lock` conventions. Whether they should become members of one
   Cargo workspace is undecided.
-- **`Cargo.lock` is committed in `pmcp-core` but not in `ledger`.** That
+- **`Cargo.lock` is committed in `pcp-core` but not in `ledger`.** That
   is the usual convention for library crates, but the asymmetry is
   worth resolving deliberately.
 - **No integration test directories** in either crate, only embedded

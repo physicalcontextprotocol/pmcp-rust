@@ -152,7 +152,7 @@ impl RedisBackend {
     pub fn new(connection_string: String, node_id: NodeId) -> Self {
         Self {
             connection_string,
-            prefix: "pmcp:ledger:".to_string(),
+            prefix: "pcp:ledger:".to_string(),
             node_id,
         }
     }
@@ -247,7 +247,7 @@ impl EtcdBackend {
     pub fn new(endpoints: Vec<String>, node_id: NodeId) -> Self {
         Self {
             endpoints,
-            prefix: "pmcp/ledger/".to_string(),
+            prefix: "pcp/ledger/".to_string(),
             node_id,
         }
     }

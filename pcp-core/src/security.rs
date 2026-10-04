@@ -1,4 +1,4 @@
-//! P-MCP Security Module
+//! PCP Security Module
 //!
 //! Implements security features including:
 // - W3C DID-based identity
@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 use sha2::{Sha256, Digest};
 use ed25519_dalek::{SigningKey, VerifyingKey, Signature, Signer, Verifier};
 use std::collections::HashMap;
-use crate::error::PmcpError;
+use crate::error::PcpError;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use chrono::Utc;
@@ -28,7 +28,7 @@ impl DID {
         let method_specific_id = format!("{}:{}:{}:{}", robot_class, model, location, serial);
         Self {
             scheme: "did".to_string(),
-            method: "pmcp".to_string(),
+            method: "pcp".to_string(),
             method_specific_id,
         }
     }
@@ -39,10 +39,10 @@ impl DID {
 
     pub fn from_str(s: &str) -> Option<Self> {
         let parts: Vec<&str> = s.split(':').collect();
-        if parts.len() >= 3 && parts[0] == "did" && parts[1] == "pmcp" {
+        if parts.len() >= 3 && parts[0] == "did" && parts[1] == "pcp" {
             Some(Self {
                 scheme: "did".to_string(),
-                method: "pmcp".to_string(),
+                method: "pcp".to_string(),
                 method_specific_id: parts[2..].join(":"),
             })
         } else {
@@ -249,16 +249,16 @@ impl AuthManager {
         }
     }
 
-    pub async fn register_robot(&self, identity: &RobotIdentityV2) -> Result<(), PmcpError> {
+    pub async fn register_robot(&self, identity: &RobotIdentityV2) -> Result<(), PcpError> {
         let mut key_pairs = self.key_pairs.write().await;
         key_pairs.insert(identity.did_string(), identity.key_pair.clone());
         Ok(())
     }
 
-    pub async fn issue_token(&self, robot_did: &str, duration_secs: u64) -> Result<AuthToken, PmcpError> {
+    pub async fn issue_token(&self, robot_did: &str, duration_secs: u64) -> Result<AuthToken, PcpError> {
         let key_pairs = self.key_pairs.read().await;
         let key_pair = key_pairs.get(robot_did)
-            .ok_or_else(|| PmcpError::invalid_params("Robot not registered"))?;
+            .ok_or_else(|| PcpError::invalid_params("Robot not registered"))?;
         
         let token = AuthToken::new(robot_did, key_pair, duration_secs);
         
@@ -268,7 +268,7 @@ impl AuthManager {
         Ok(token)
     }
 
-    pub async fn validate_token(&self, token_id: &str) -> Result<bool, PmcpError> {
+    pub async fn validate_token(&self, token_id: &str) -> Result<bool, PcpError> {
         let tokens = self.tokens.read().await;
         if let Some(token) = tokens.get(token_id) {
             Ok(token.is_valid())
@@ -277,7 +277,7 @@ impl AuthManager {
         }
     }
 
-    pub async fn revoke_token(&self, token_id: &str) -> Result<(), PmcpError> {
+    pub async fn revoke_token(&self, token_id: &str) -> Result<(), PcpError> {
         let mut tokens = self.tokens.write().await;
         tokens.remove(token_id);
         Ok(())
@@ -305,7 +305,7 @@ pub struct TEEAttestation {
 impl TEEAttestation {
     pub fn new() -> Self {
         let mut hasher = Sha256::new();
-        hasher.update(b"pmcp-enclave-v1");
+        hasher.update(b"pcp-enclave-v1");
         let measurement = format!("{:x}", hasher.finalize());
 
         Self {
@@ -468,18 +468,18 @@ impl SecurityManager {
         }
     }
 
-    pub async fn register_robot(&self, identity: RobotIdentityV2) -> Result<(), PmcpError> {
+    pub async fn register_robot(&self, identity: RobotIdentityV2) -> Result<(), PcpError> {
         let did = identity.did_string();
         self.auth_manager.register_robot(&identity).await?;
         self.registered_robots.write().await.insert(did, identity);
         Ok(())
     }
 
-    pub async fn authenticate(&self, token_id: &str) -> Result<bool, PmcpError> {
+    pub async fn authenticate(&self, token_id: &str) -> Result<bool, PcpError> {
         self.auth_manager.validate_token(token_id).await
     }
 
-    pub async fn issue_token(&self, robot_did: &str, duration_secs: u64) -> Result<AuthToken, PmcpError> {
+    pub async fn issue_token(&self, robot_did: &str, duration_secs: u64) -> Result<AuthToken, PcpError> {
         self.auth_manager.issue_token(robot_did, duration_secs).await
     }
 
@@ -491,12 +491,12 @@ impl SecurityManager {
         self.policies.read().await.get(name).cloned()
     }
 
-    pub async fn check_policy(&self, policy_name: &str, transport: &str) -> Result<bool, PmcpError> {
+    pub async fn check_policy(&self, policy_name: &str, transport: &str) -> Result<bool, PcpError> {
         let policies = self.policies.read().await;
         if let Some(policy) = policies.get(policy_name) {
             Ok(policy.allowed_transports.contains(&transport.to_string()))
         } else {
-            Err(PmcpError::invalid_params("Policy not found"))
+            Err(PcpError::invalid_params("Policy not found"))
         }
     }
 
@@ -563,7 +563,7 @@ mod tests {
     fn test_did_creation() {
         let did = DID::new("arm", "ur5", "lab-01", "serial123");
         assert_eq!(did.scheme, "did");
-        assert_eq!(did.method, "pmcp");
+        assert_eq!(did.method, "pcp");
     }
 
     #[test]
@@ -577,13 +577,13 @@ mod tests {
     #[test]
     fn test_robot_identity() {
         let identity = RobotIdentityV2::new("arm", "UR5", "12345", "lab-01");
-        assert!(identity.did_string().starts_with("did:pmcp:"));
+        assert!(identity.did_string().starts_with("did:pcp:"));
     }
 
     #[test]
     fn test_auth_token() {
         let key_pair = KeyPair::generate();
-        let token = AuthToken::new("did:pmcp:arm:ur5:lab:123", &key_pair, 3600);
+        let token = AuthToken::new("did:pcp:arm:ur5:lab:123", &key_pair, 3600);
         assert!(token.is_valid());
     }
 

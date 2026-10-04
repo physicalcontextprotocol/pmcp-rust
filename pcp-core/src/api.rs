@@ -1,4 +1,4 @@
-//! P-MCP REST API Server
+//! PCP REST API Server
 //!
 //! HTTP REST API for remote management and control
 
@@ -448,12 +448,12 @@ impl OpenAPIHandler {
         serde_json::json!({
             "openapi": "3.0.0",
             "info": {
-                "title": "P-MCP REST API",
+                "title": "PCP REST API",
                 "version": "0.5.0",
-                "description": "Physical Model Context Protocol REST API",
+                "description": "Physical Context Protocol REST API",
             },
             "servers": [
-                { "url": "http://localhost:8080/pmcp/api", "description": "Local server" }
+                { "url": "http://localhost:8080/pcp/api", "description": "Local server" }
             ],
             "paths": {
                 "/health": {
@@ -635,8 +635,8 @@ pub struct ApiServerBuilder {
 impl ApiServerBuilder {
     pub fn new() -> Self {
         Self {
-            prefix: "/pmcp/api".to_string(),
-            server: ApiServer::new("/pmcp/api"),
+            prefix: "/pcp/api".to_string(),
+            server: ApiServer::new("/pcp/api"),
             state: Arc::new(RwLock::new(ServerState {
                 robot_id: "default".to_string(),
                 uptime_s: 0.0,

@@ -1,4 +1,4 @@
-//! Minimal P-MCP server and client, in two processes.
+//! Minimal PCP server and client, in two processes.
 //!
 //! ```text
 //! cargo run --example server_and_client -- server   # terminal 1
@@ -6,7 +6,7 @@
 //! ```
 
 use physicalcontextprotocol::{
-    ActuationSpec, PMCPServer, PMCPServerBuilder, TcpClientTransport, Transport,
+    ActuationSpec, PCPServer, PCPServerBuilder, TcpClientTransport, Transport,
 };
 use std::error::Error;
 use std::net::SocketAddr;
@@ -31,7 +31,7 @@ fn actuation_spec() -> ActuationSpec {
 /// Server process. `run_stdio()` speaks MCP over stdin/stdout; `run_http(host,
 /// port)` is the TCP variant a `TcpClientTransport` connects to.
 async fn run_server() -> Result<(), Box<dyn Error>> {
-    let server: PMCPServer = PMCPServerBuilder::new("ur5-arm-01")
+    let server: PCPServer = PCPServerBuilder::new("ur5-arm-01")
         .version("1.0.0")
         .robot_id("ur5-arm-01")
         .actuation(actuation_spec())

@@ -1,4 +1,4 @@
-//! P-MCP Raft-based Consensus Engine
+//! PCP Raft-based Consensus Engine
 //!
 //! Provides distributed consensus for fleet-wide safety decisions,
 //! lease arbitration, and constitution change proposals.
@@ -13,7 +13,7 @@ use tokio::time::interval;
 use uuid::Uuid;
 use tracing::{debug, error, info, warn};
 
-use crate::error::{PmcpError, PmcpErrorCode};
+use crate::error::{PcpError, PcpErrorCode};
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  RAFT ROLES
@@ -130,9 +130,9 @@ pub enum RaftMessage {
 // ─────────────────────────────────────────────────────────────────────────────
 
 pub trait StateMachine: Send + Sync {
-    fn apply(&mut self, command: &LogCommand) -> Result<serde_json::Value, PmcpError>;
+    fn apply(&mut self, command: &LogCommand) -> Result<serde_json::Value, PcpError>;
     fn snapshot(&self) -> Vec<u8>;
-    fn restore(&mut self, snapshot: &[u8]) -> Result<(), PmcpError>;
+    fn restore(&mut self, snapshot: &[u8]) -> Result<(), PcpError>;
 }
 
 pub struct FleetStateMachine {
@@ -176,7 +176,7 @@ impl Default for FleetStateMachine {
 }
 
 impl StateMachine for FleetStateMachine {
-    fn apply(&mut self, command: &LogCommand) -> Result<serde_json::Value, PmcpError> {
+    fn apply(&mut self, command: &LogCommand) -> Result<serde_json::Value, PcpError> {
         match command {
             LogCommand::NoOp => Ok(serde_json::Value::Null),
 
@@ -250,9 +250,9 @@ impl StateMachine for FleetStateMachine {
         serde_json::to_vec(&state).unwrap_or_default()
     }
 
-    fn restore(&mut self, snapshot: &[u8]) -> Result<(), PmcpError> {
+    fn restore(&mut self, snapshot: &[u8]) -> Result<(), PcpError> {
         let state: serde_json::Value = serde_json::from_slice(snapshot)
-            .map_err(|e| PmcpError::with_message(PmcpErrorCode::InternalError, e.to_string()))?;
+            .map_err(|e| PcpError::with_message(PcpErrorCode::InternalError, e.to_string()))?;
 
         if let Some(leases) = state.get("leases").and_then(|v| v.as_object()) {
             for (zone, val) in leases {
@@ -318,7 +318,7 @@ pub struct RaftNode<S: StateMachine> {
     // Application
     state_machine: S,
     // Pending client proposals (id -> waker)
-    pending: HashMap<String, tokio::sync::oneshot::Sender<Result<serde_json::Value, PmcpError>>>,
+    pending: HashMap<String, tokio::sync::oneshot::Sender<Result<serde_json::Value, PcpError>>>,
 }
 
 impl<S: StateMachine> RaftNode<S> {
@@ -715,9 +715,9 @@ impl ConsensusCluster {
         (cluster, runner)
     }
 
-    pub async fn propose(&self, command: LogCommand) -> Result<(), PmcpError> {
+    pub async fn propose(&self, command: LogCommand) -> Result<(), PcpError> {
         self.proposal_tx.send(command).await
-            .map_err(|e| PmcpError::with_message(PmcpErrorCode::InternalError, e.to_string()))
+            .map_err(|e| PcpError::with_message(PcpErrorCode::InternalError, e.to_string()))
     }
 
     pub fn node_id(&self) -> &str { &self.node_id }

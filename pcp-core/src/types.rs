@@ -1,15 +1,15 @@
-//! P-MCP Core Types
+//! PCP Core Types
 //!
-//! Core data structures for the Physical Model Context Protocol v0.5.
+//! Core data structures for the Physical Context Protocol v0.5.
 //! These types mirror the Python implementation and provide MCP-compatible serialization.
 
 use serde::{Deserialize, Serialize};
 use chrono::{DateTime, Utc};
 use uuid::Uuid;
-use crate::error::PmcpError;
+use crate::error::PcpError;
 
 /// Protocol Constants
-pub const PMCP_VERSION: &str = "0.5";
+pub const PCP_VERSION: &str = "0.5";
 pub const JSONRPC_VERSION: &str = "2.0";
 pub const MCP_VERSION: &str = "2024-11-05";
 
@@ -59,7 +59,7 @@ pub struct JsonRpcResponse {
     #[serde(default)]
     pub result: Option<serde_json::Value>,
     #[serde(default)]
-    pub error: Option<PmcpError>,
+    pub error: Option<PcpError>,
     pub id: Option<serde_json::Value>,
 }
 
@@ -73,7 +73,7 @@ impl JsonRpcResponse {
         }
     }
 
-    pub fn error(id: Option<serde_json::Value>, error: PmcpError) -> Self {
+    pub fn error(id: Option<serde_json::Value>, error: PcpError) -> Self {
         Self {
             jsonrpc: JSONRPC_VERSION.to_string(),
             result: None,
@@ -111,7 +111,7 @@ impl RobotIdentity {
         let model = model.into();
         let model_lower = model.to_lowercase();
         let loc = location.into().to_lowercase();
-        let did = format!("did:pmcp:{}:{}:{}:{}", class, model_lower, loc, uid);
+        let did = format!("did:pcp:{}:{}:{}:{}", class, model_lower, loc, uid);
 
         Self {
             did,
@@ -153,7 +153,7 @@ pub struct ActuationParameter {
 
 fn default_true() -> bool { true }
 
-/// Actuation specification - the P-MCP equivalent of an MCP Tool
+/// Actuation specification - the PCP equivalent of an MCP Tool
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ActuationSpec {
     pub name: String,
@@ -230,7 +230,7 @@ impl ActuationSpec {
                 "requires_lease": self.requires_lease,
                 "shadow_required": self.shadow_required,
                 "iso_class": self.iso_class,
-                "protocol": "pmcp/0.5",
+                "protocol": "pcp/0.5",
             }
         })
     }
@@ -390,7 +390,7 @@ fn default_hz() -> f64 { 10.0 }
 
 impl SensorSpec {
     pub fn uri(&self) -> String {
-        format!("pmcp://{}/sensors/{}", self.robot_id, self.name)
+        format!("pcp://{}/sensors/{}", self.robot_id, self.name)
     }
 
     pub fn to_mcp_resource(&self) -> serde_json::Value {
@@ -405,7 +405,7 @@ impl SensorSpec {
                 "unit": self.unit,
                 "hz": self.hz,
                 "is_stream": self.is_stream,
-                "protocol": "pmcp/0.5",
+                "protocol": "pcp/0.5",
             }
         })
     }
@@ -666,8 +666,8 @@ impl Capabilities {
             caps.insert("sampling".to_string(), serde_json::json!({}));
         }
         caps.insert("experimental".to_string(), serde_json::json!({
-            "pmcp": {
-                "version": PMCP_VERSION,
+            "pcp": {
+                "version": PCP_VERSION,
                 "shadow": self.shadow,
                 "leases": self.leases,
                 "estop": self.estop,
@@ -772,7 +772,7 @@ impl ShadowPreview {
     }
 
     /// schema/v0.6.0 ShadowResult.verdict (PASS/CONDITIONAL_PASS/FAIL/INDETERMINATE),
-    /// derived from status+safe. See pmcp/types.py's ShadowVerdict for the
+    /// derived from status+safe. See pcp/types.py's ShadowVerdict for the
     /// matching Python logic and rationale (confidence/monitoring/determinism
     /// blocks require the HNN-Simplex monitor -- not implemented anywhere in
     /// this org yet, so this SDK never fabricates them; verdict is derived
@@ -825,7 +825,7 @@ fn default_version() -> String { "1.0.0".to_string() }
 impl Default for ServerInfo {
     fn default() -> Self {
         Self {
-            name: "pmcp-server".to_string(),
+            name: "pcp-server".to_string(),
             version: "1.0.0".to_string(),
         }
     }
@@ -847,7 +847,7 @@ pub struct ClientInfo {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServerStatus {
     pub robot_id: String,
-    pub pmcp_version: String,
+    pub pcp_version: String,
     #[serde(rename = "uptimeS")]
     pub uptime_s: f64,
     #[serde(rename = "callCount")]
@@ -868,7 +868,7 @@ impl Default for ServerStatus {
     fn default() -> Self {
         Self {
             robot_id: String::new(),
-            pmcp_version: PMCP_VERSION.to_string(),
+            pcp_version: PCP_VERSION.to_string(),
             uptime_s: 0.0,
             call_count: 0,
             blocked_count: 0,

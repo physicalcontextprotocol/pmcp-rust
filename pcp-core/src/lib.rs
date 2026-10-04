@@ -1,6 +1,6 @@
-//! P-MCP Core - Physical Model Context Protocol Rust Implementation
+//! PCP Core - Physical Context Protocol Rust Implementation
 //!
-//! This is the core Rust implementation of P-MCP v0.5, providing:
+//! This is the core Rust implementation of PCP v0.5, providing:
 //! - Full MCP wire protocol compatibility
 //! - JSON-RPC 2.0 message handling
 //! - Robot actuation and sensor management
@@ -37,8 +37,8 @@ pub mod identity;
 pub mod python;
 
 pub use types::*;
-pub use server::{PMCPServer, PMCPServerBuilder};
-pub use error::{PmcpError, PmcpErrorCode};
+pub use server::{PCPServer, PCPServerBuilder};
+pub use error::{PcpError, PcpErrorCode};
 pub use consensus::{RaftNode, RaftConfig, FleetStateMachine, LogCommand, ConsensusCluster};
 pub use network::{
     Transport, StdioTransport, TcpServerTransport, TcpClientTransport, ConnectionPool,

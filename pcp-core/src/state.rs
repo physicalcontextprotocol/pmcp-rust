@@ -1,4 +1,4 @@
-//! P-MCP State Management
+//! PCP State Management
 //!
 //! Manages server state including:
 //! - Robot state (position, velocity, joint angles)

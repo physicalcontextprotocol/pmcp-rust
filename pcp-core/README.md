@@ -1,10 +1,10 @@
 # physicalcontextprotocol
 
-Rust implementation of the **Physical Model Context Protocol** (P-MCP) — an
+Rust implementation of the **Physical Context Protocol** (PCP) — an
 MCP-compatible standard protocol for robots and industrial systems.
 
 Part of the [`physicalcontextprotocol`](https://github.com/physicalcontextprotocol)
-organization. Previously published as `pmcp-core`; renamed for consistency with
+organization. Previously published as `pcp-core`; renamed for consistency with
 the Python (`physicalcontextprotocol` on PyPI) and TypeScript
 (`physicalcontextprotocol` on npm) SDKs. Nothing was ever released under the
 old name, so no compatibility shim is provided.
@@ -20,7 +20,7 @@ cargo add physicalcontextprotocol
 ```rust
 use physicalcontextprotocol::{
     // server
-    PMCPServer,
+    PCPServer,
     // transports
     Transport, StdioTransport, TcpServerTransport, TcpClientTransport, ConnectionPool,
     // consensus
@@ -32,13 +32,13 @@ use physicalcontextprotocol::{
     // observability
     TelemetryPipeline, MetricsRegistry, EventLog, StructuredEvent,
     // errors
-    PmcpError, PmcpErrorCode,
+    PcpError, PcpErrorCode,
 };
 ```
 
 The crate provides a **server** implementation. For client-side work, use
 `TcpClientTransport` (which implements the `Transport` trait) together with
-`ConnectionPool`. There is no high-level `PMCPClient` type.
+`ConnectionPool`. There is no high-level `PCPClient` type.
 
 ## Optional features
 

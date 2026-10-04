@@ -2,7 +2,7 @@
 name = "physicalcontextprotocol-ledger"
 version = "1.0.0"
 edition = "2021"
-description = "P-MCP Distributed Digital Twin Ledger with 4D CRDT"
+description = "PCP Distributed Digital Twin Ledger with 4D CRDT"
 authors = ["Sandeep THummala <physicalcontextprotocol@gmail.com>"]
 license = "Apache-2.0"
 repository = "https://github.com/physicalcontextprotocol/pmcp-rust"
@@ -42,5 +42,5 @@ name = "physicalcontextprotocol_ledger"
 path = "src/lib.rs"
 
 [[bin]]
-name = "pmcp-ledger"
+name = "pcp-ledger"
 path = "src/main.rs"

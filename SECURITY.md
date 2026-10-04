@@ -16,26 +16,26 @@ Do not open a public issue.
 ## In scope here
 
 - Fencing-token or lease-staleness logic that accepts a stale token, in
-  `pmcp-core/src/lease.rs` or `pmcp-core/src/consensus.rs`.
+  `pcp-core/src/lease.rs` or `pcp-core/src/consensus.rs`.
 - Signature verification, `did:document`-style identity creation, or
-  auth-token handling in `pmcp-core/src/security.rs` or
-  `pmcp-core/src/identity.rs` that accepts a forged or replayed
+  auth-token handling in `pcp-core/src/security.rs` or
+  `pcp-core/src/identity.rs` that accepts a forged or replayed
   credential.
 - A gate in the actuation path that can be bypassed.
-- Memory-safety issues in the `pmcp-core` crate.
+- Memory-safety issues in the `pcp-core` crate.
 - Leaked secrets or credentials in this repository.
 
 ## Out of scope here
 
-- `pmcp-ledger` does not currently compile (19 pre-existing type
+- `pcp-ledger` does not currently compile (19 pre-existing type
   errors in the CRDT layer). Please report build breakage in
-  `pmcp-ledger` as an issue, not a security advisory.
-- Missing features relative to the specification. `pmcp-core` does not
+  `pcp-ledger` as an issue, not a security advisory.
+- Missing features relative to the specification. `pcp-core` does not
   implement every part of the v0.5 spec; its README is explicit about
   its current scope.
 - Dependency CVEs in transitive crates. Report those to the registry.
 
 ## Supported
 
-`pmcp-core` v0.5 line, best-effort. `pmcp-ledger` is not supported
+`pcp-core` v0.5 line, best-effort. `pcp-ledger` is not supported
 and not compiled by CI's blocking jobs.

@@ -1,4 +1,4 @@
-//! P-MCP Metrics and Monitoring
+//! PCP Metrics and Monitoring
 //!
 //! Comprehensive metrics collection including:
 // - Performance metrics
@@ -292,24 +292,24 @@ pub struct ServerMetrics {
 impl ServerMetrics {
     pub fn new() -> Self {
         Self {
-            requests_total: Counter::new("pmcp_requests_total")
+            requests_total: Counter::new("pcp_requests_total")
                 .with_label("method", "all"),
-            requests_in_flight: Gauge::new("pmcp_requests_in_flight"),
-            request_duration: Histogram::new("pmcp_request_duration_seconds", vec![
+            requests_in_flight: Gauge::new("pcp_requests_in_flight"),
+            request_duration: Histogram::new("pcp_request_duration_seconds", vec![
                 0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0, 5.0, 10.0,
             ]),
-            errors_total: Counter::new("pmcp_errors_total")
+            errors_total: Counter::new("pcp_errors_total")
                 .with_label("type", "all"),
-            bytes_received: Counter::new("pmcp_bytes_received"),
-            bytes_sent: Counter::new("pmcp_bytes_sent"),
-            active_sessions: Gauge::new("pmcp_active_sessions"),
-            active_robots: Gauge::new("pmcp_active_robots"),
-            estop_activations: Counter::new("pmcp_estop_activations_total"),
-            shadow_blocks: Counter::new("pmcp_shadow_blocks_total"),
-            constitution_blocks: Counter::new("pmcp_constitution_blocks_total"),
-            lease_requests: Counter::new("pmcp_lease_requests_total"),
-            lease_grants: Counter::new("pmcp_lease_grants_total"),
-            lease_denials: Counter::new("pmcp_lease_denials_total"),
+            bytes_received: Counter::new("pcp_bytes_received"),
+            bytes_sent: Counter::new("pcp_bytes_sent"),
+            active_sessions: Gauge::new("pcp_active_sessions"),
+            active_robots: Gauge::new("pcp_active_robots"),
+            estop_activations: Counter::new("pcp_estop_activations_total"),
+            shadow_blocks: Counter::new("pcp_shadow_blocks_total"),
+            constitution_blocks: Counter::new("pcp_constitution_blocks_total"),
+            lease_requests: Counter::new("pcp_lease_requests_total"),
+            lease_grants: Counter::new("pcp_lease_grants_total"),
+            lease_denials: Counter::new("pcp_lease_denials_total"),
         }
     }
 

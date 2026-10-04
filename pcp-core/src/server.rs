@@ -1,11 +1,11 @@
-//! P-MCP Server Implementation
+//! PCP Server Implementation
 //!
 //! Main server that handles JSON-RPC messages and dispatches to handlers
 
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use crate::types::*;
-use crate::error::{PmcpError, PmcpErrorCode};
+use crate::error::{PcpError, PcpErrorCode};
 use crate::methods::*;
 use crate::lease::LeaseManager;
 use crate::safety::SafetyMiddleware;
@@ -16,9 +16,9 @@ pub type ActuationFn = Box<dyn Fn(serde_json::Value) -> Result<ActuationResult, 
 /// Sensor function type
 pub type SensorFn = Box<dyn Fn() -> Result<SensorReading, String> + Send + Sync>;
 
-/// PMCPServer - Main server struct
-pub struct PMCPServer {
-    // Arc-shared, not deep-cloned: multiple PMCPServer handles (e.g. one per
+/// PCPServer - Main server struct
+pub struct PCPServer {
+    // Arc-shared, not deep-cloned: multiple PCPServer handles (e.g. one per
     // tokio::spawn'd connection/notification task -- see handle_message's
     // notification branch) must observe the SAME lease/safety/audit state.
     // A plain RwLock<HandlerContext> here previously made every clone() an
@@ -30,8 +30,8 @@ pub struct PMCPServer {
     sensor_fn: Option<Arc<SensorFn>>,
 }
 
-impl PMCPServer {
-    /// Create a new P-MCP Server
+impl PCPServer {
+    /// Create a new PCP Server
     pub fn new(
         name: impl Into<String>,
         version: impl Into<String>,
@@ -88,7 +88,7 @@ impl PMCPServer {
             Err(e) => {
                 return Some(JsonRpcResponse::error(
                     None,
-                    PmcpError::with_message(PmcpErrorCode::ParseError, e.to_string()),
+                    PcpError::with_message(PcpErrorCode::ParseError, e.to_string()),
                 ));
             }
         };
@@ -117,7 +117,7 @@ impl PMCPServer {
     }
 
     /// Handle a single method
-    async fn handle_method(&self, method: &str, params: serde_json::Value) -> Result<serde_json::Value, PmcpError> {
+    async fn handle_method(&self, method: &str, params: serde_json::Value) -> Result<serde_json::Value, PcpError> {
         match method {
             // MCP Standard Methods
             "initialize" => {
@@ -149,7 +149,7 @@ impl PMCPServer {
                 handle_logging_set_level(&ctx, &params).await
             }
 
-            // P-MCP Extension Methods
+            // PCP Extension Methods
             "shadow/preview" => {
                 let ctx = self.ctx.read().await;
                 handle_shadow_preview(&ctx, &params).await
@@ -162,31 +162,31 @@ impl PMCPServer {
                 let ctx = self.ctx.read().await;
                 handle_lease_release(&ctx, &params).await
             }
-            "pmcp/estop" => {
+            "pcp/estop" => {
                 let ctx = self.ctx.read().await;
                 handle_estop(&ctx, &params).await
             }
-            "pmcp/status" => {
+            "pcp/status" => {
                 let ctx = self.ctx.read().await;
                 handle_status(&ctx, &params).await
             }
-            "pmcp/identity" => {
+            "pcp/identity" => {
                 let ctx = self.ctx.read().await;
                 handle_identity(&ctx, &params).await
             }
-            "pmcp/constitution" => {
+            "pcp/constitution" => {
                 let ctx = self.ctx.read().await;
                 handle_constitution(&ctx, &params).await
             }
 
-            _ => Err(PmcpError::method_not_found(method)),
+            _ => Err(PcpError::method_not_found(method)),
         }
     }
 
     /// Handle notifications (fire-and-forget)
-    async fn handle_notification(&self, method: &str, params: serde_json::Value) -> Result<(), PmcpError> {
+    async fn handle_notification(&self, method: &str, params: serde_json::Value) -> Result<(), PcpError> {
         match method {
-            "pmcp/estop" => {
+            "pcp/estop" => {
                 let active = params.get("active").and_then(|v| v.as_bool()).unwrap_or(true);
                 self.ctx.write().await.safety.write().await.set_estop(active);
                 tracing::info!("[Server] Notification: E-stop {}", if active { "ON" } else { "OFF" });
@@ -219,7 +219,7 @@ impl PMCPServer {
                         Err(e) => {
                             let resp = JsonRpcResponse::error(
                                 None,
-                                PmcpError::with_message(PmcpErrorCode::ParseError, e.to_string()),
+                                PcpError::with_message(PcpErrorCode::ParseError, e.to_string()),
                             );
                             let _ = writeln!(writer, "{}", serde_json::to_string(&resp).unwrap_or_default());
                             continue;
@@ -248,7 +248,7 @@ impl PMCPServer {
     }
 }
 
-impl Clone for PMCPServer {
+impl Clone for PCPServer {
     fn clone(&self) -> Self {
         Self {
             ctx: Arc::clone(&self.ctx),
@@ -263,7 +263,7 @@ impl Clone for PMCPServer {
 // ============================================================================
 
 /// Builder pattern for creating servers
-pub struct PMCPServerBuilder {
+pub struct PCPServerBuilder {
     name: String,
     version: String,
     robot_id: Option<String>,
@@ -275,7 +275,7 @@ pub struct PMCPServerBuilder {
     sensors: Vec<SensorSpec>,
 }
 
-impl PMCPServerBuilder {
+impl PCPServerBuilder {
     pub fn new(name: impl Into<String>) -> Self {
         Self {
             name: name.into(),
@@ -330,8 +330,8 @@ impl PMCPServerBuilder {
         self
     }
 
-    pub fn build(self) -> PMCPServer {
-        let server = PMCPServer::new(
+    pub fn build(self) -> PCPServer {
+        let server = PCPServer::new(
             self.name,
             self.version,
             self.robot_id,
@@ -358,7 +358,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_server_creation() {
-        let server = PMCPServer::new(
+        let server = PCPServer::new(
             "test-robot",
             "1.0.0",
             None,
@@ -376,7 +376,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_initialize() {
-        let server = PMCPServer::new("test", "1.0.0", None, "arm", "test", "000", "lab");
+        let server = PCPServer::new("test", "1.0.0", None, "arm", "test", "000", "lab");
 
         let req = JsonRpcRequest::with_id(
             "initialize",
@@ -395,7 +395,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_tools_list_empty() {
-        let server = PMCPServer::new("test", "1.0.0", None, "arm", "test", "000", "lab");
+        let server = PCPServer::new("test", "1.0.0", None, "arm", "test", "000", "lab");
 
         let req = JsonRpcRequest::with_id("tools/list", serde_json::json!({}), "1");
         let response = server.handle_message(serde_json::to_value(req).unwrap()).await;
@@ -408,7 +408,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_ping() {
-        let server = PMCPServer::new("test", "1.0.0", None, "arm", "test", "000", "lab");
+        let server = PCPServer::new("test", "1.0.0", None, "arm", "test", "000", "lab");
 
         let req = JsonRpcRequest::with_id("ping", serde_json::json!({}), "1");
         let response = server.handle_message(serde_json::to_value(req).unwrap()).await;
@@ -419,7 +419,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_method_not_found() {
-        let server = PMCPServer::new("test", "1.0.0", None, "arm", "test", "000", "lab");
+        let server = PCPServer::new("test", "1.0.0", None, "arm", "test", "000", "lab");
 
         let req = JsonRpcRequest::with_id("unknown/method", serde_json::json!({}), "1");
         let response = server.handle_message(serde_json::to_value(req).unwrap()).await;
@@ -427,6 +427,6 @@ mod tests {
         let resp = response.unwrap();
         assert!(resp.error.is_some());
         let err = resp.error.unwrap();
-        assert_eq!(err.code, PmcpErrorCode::MethodNotFound.code());
+        assert_eq!(err.code, PcpErrorCode::MethodNotFound.code());
     }
 }

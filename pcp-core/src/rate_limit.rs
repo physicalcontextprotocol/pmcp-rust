@@ -1,4 +1,4 @@
-//! P-MCP Rate Limiter & Scheduler
+//! PCP Rate Limiter & Scheduler
 //!
 //! Token-bucket + sliding-window rate limiters for actuation frequency control,
 //! API rate limiting, and energy budget enforcement.
@@ -10,7 +10,7 @@ use std::time::{Duration, Instant};
 use tokio::sync::Mutex;
 use tracing::{debug, warn};
 
-use crate::error::{PmcpError, PmcpErrorCode};
+use crate::error::{PcpError, PcpErrorCode};
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  TOKEN BUCKET
@@ -150,7 +150,7 @@ impl ActuationRateLimiter {
     }
 
     /// Check and consume one token. Returns Ok if permitted, Err if rate-limited.
-    pub async fn check(&self, robot_id: &str, actuation: &str) -> Result<(), PmcpError> {
+    pub async fn check(&self, robot_id: &str, actuation: &str) -> Result<(), PcpError> {
         let key = format!("{}:{}", robot_id, actuation);
         let mut map = self.limiters.lock().await;
         let bucket = map.entry(key).or_insert_with(|| {
@@ -165,8 +165,8 @@ impl ActuationRateLimiter {
                 "Rate limit exceeded for robot={} actuation={}, retry in {}ms",
                 robot_id, actuation, wait
             );
-            Err(PmcpError::with_message(
-                PmcpErrorCode::RateLimited,
+            Err(PcpError::with_message(
+                PcpErrorCode::RateLimited,
                 format!("Rate limit exceeded; retry in {}ms", wait),
             ))
         }
@@ -259,7 +259,7 @@ impl EnergyBudgetTracker {
         &self,
         robot_id: &str,
         joules: f64,
-    ) -> Result<f64, PmcpError> {
+    ) -> Result<f64, PcpError> {
         let mut map = self.budgets.lock().await;
         match map.get_mut(robot_id) {
             None => {
@@ -270,8 +270,8 @@ impl EnergyBudgetTracker {
                 if bucket.consume(joules) {
                     Ok(bucket.remaining())
                 } else {
-                    Err(PmcpError::with_message(
-                        PmcpErrorCode::EnergyBudget,
+                    Err(PcpError::with_message(
+                        PcpErrorCode::EnergyBudget,
                         format!(
                             "Energy budget exceeded for robot={}: requested={:.1}J remaining={:.1}J",
                             robot_id,
@@ -340,11 +340,11 @@ impl PriorityScheduler {
         }
     }
 
-    pub async fn enqueue(&self, task: ScheduledTask) -> Result<(), PmcpError> {
+    pub async fn enqueue(&self, task: ScheduledTask) -> Result<(), PcpError> {
         let mut q = self.queue.lock().await;
         if q.len() >= self.max_queue_depth {
-            return Err(PmcpError::with_message(
-                PmcpErrorCode::InternalError,
+            return Err(PcpError::with_message(
+                PcpErrorCode::InternalError,
                 "Scheduler queue full".to_string(),
             ));
         }

@@ -9,6 +9,14 @@ Two crates with independent versions: `physicalcontextprotocol` (protocol core) 
 ## [Unreleased]
 
 ### Changed
+- **Protocol renamed to PCP.** The acronym is now **PCP** and the expanded
+  name is **Physical Context Protocol** (was "Physical Model Context
+  Protocol"). Public types follow: `PMCPServer` -> `PCPServer`,
+  `PMCPServerBuilder` -> `PCPServerBuilder`, `PmcpError` -> `PcpError`,
+  `PmcpErrorCode` -> `PcpErrorCode`. The JSON-RPC method prefix moves from
+  `pmcp/` to `pcp/` (`pcp/estop`, `pcp/status`, `pcp/metrics`, ...), matching
+  the Python and TypeScript SDKs. The PyO3 extension module is now
+  `pcp_core` (was `pmcp_core`).
 - **Crates renamed.** `pmcp-core` -> `physicalcontextprotocol`,
   `pmcp-ledger` -> `physicalcontextprotocol-ledger`. The library target is
   now `physicalcontextprotocol` (was `pmcp_core`), so imports become

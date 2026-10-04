@@ -1,4 +1,4 @@
-//! P-MCP Plugin System
+//! PCP Plugin System
 //!
 //! Extensible plugin architecture for:
 // - Hardware drivers

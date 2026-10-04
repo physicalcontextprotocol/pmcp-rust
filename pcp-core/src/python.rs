@@ -1,18 +1,18 @@
-//! P-MCP Python Bindings
+//! PCP Python Bindings
 //!
-//! PyO3-based Python bindings for the P-MCP Rust core
+//! PyO3-based Python bindings for the PCP Rust core
 
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
 use std::sync::Arc;
 
 use crate::types::*;
-use crate::server::{PMCPServer, PMCPServerBuilder};
-use crate::error::PmcpErrorCode;
+use crate::server::{PCPServer, PCPServerBuilder};
+use crate::error::PcpErrorCode;
 
-/// P-MCP Python Module
+/// PCP Python Module
 #[pymodule]
-pub fn pmcp_core(_py: Python, m: &PyModule) -> PyResult<()> {
+pub fn pcp_core(_py: Python, m: &PyModule) -> PyResult<()> {
     // Register types
     m.add_class::<PyActuationSpec>()?;
     m.add_class::<PySensorSpec>()?;
@@ -20,10 +20,10 @@ pub fn pmcp_core(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<PySensorReading>()?;
     m.add_class::<PyLeaseGrant>()?;
     m.add_class::<PyServerStatus>()?;
-    m.add_class::<PyPMCPServer>()?;
+    m.add_class::<PyPCPServer>()?;
 
     // Register constants
-    m.add("PMCP_VERSION", PMCP_VERSION)?;
+    m.add("PCP_VERSION", PCP_VERSION)?;
     m.add("MCP_VERSION", MCP_VERSION)?;
 
     Ok(())
@@ -305,8 +305,8 @@ impl PyServerStatus {
     }
 
     #[getter]
-    fn pmcp_version(&self) -> String {
-        self.inner.pmcp_version.clone()
+    fn pcp_version(&self) -> String {
+        self.inner.pcp_version.clone()
     }
 
     #[getter]
@@ -328,7 +328,7 @@ impl PyServerStatus {
         Python::with_gil(|py| {
             let dict = PyDict::new(py);
             dict.set_item("robot_id", &self.inner.robot_id)?;
-            dict.set_item("pmcp_version", &self.inner.pmcp_version)?;
+            dict.set_item("pcp_version", &self.inner.pcp_version)?;
             dict.set_item("uptime_s", self.inner.uptime_s)?;
             dict.set_item("call_count", self.inner.call_count)?;
             dict.set_item("blocked_count", self.inner.blocked_count)?;
@@ -337,15 +337,15 @@ impl PyServerStatus {
     }
 }
 
-/// Python wrapper for PMCPServer
+/// Python wrapper for PCPServer
 #[pyclass]
-struct PyPMCPServer {
-    server: Arc<PMCPServer>,
+struct PyPCPServer {
+    server: Arc<PCPServer>,
 }
 
 #[pymethods]
-impl PyPMCPServer {
-    /// Create a new PMCPServer
+impl PyPCPServer {
+    /// Create a new PCPServer
     #[new]
     fn new(
         name: String,
@@ -356,7 +356,7 @@ impl PyPMCPServer {
         serial: Option<String>,
         location: Option<String>,
     ) -> PyResult<Self> {
-        let server = PMCPServer::new(
+        let server = PCPServer::new(
             name,
             version.unwrap_or_else(|| "1.0.0".to_string()),
             robot_id,
@@ -400,7 +400,7 @@ impl PyPMCPServer {
         Ok(PyServerStatus {
             inner: ServerStatus {
                 robot_id: "python-test".to_string(),
-                pmcp_version: PMCP_VERSION.to_string(),
+                pcp_version: PCP_VERSION.to_string(),
                 uptime_s: 0.0,
                 call_count: 0,
                 blocked_count: 0,
@@ -412,36 +412,36 @@ impl PyPMCPServer {
 
 /// Error codes
 #[pyclass]
-struct PyPmcpErrorCode;
+struct PyPcpErrorCode;
 
 #[pymethods]
-impl PyPmcpErrorCode {
+impl PyPcpErrorCode {
     #[classattr]
-    fn PARSE_ERROR() -> i32 { PmcpErrorCode::ParseError.code() }
+    fn PARSE_ERROR() -> i32 { PcpErrorCode::ParseError.code() }
 
     #[classattr]
-    fn INVALID_REQUEST() -> i32 { PmcpErrorCode::InvalidRequest.code() }
+    fn INVALID_REQUEST() -> i32 { PcpErrorCode::InvalidRequest.code() }
 
     #[classattr]
-    fn METHOD_NOT_FOUND() -> i32 { PmcpErrorCode::MethodNotFound.code() }
+    fn METHOD_NOT_FOUND() -> i32 { PcpErrorCode::MethodNotFound.code() }
 
     #[classattr]
-    fn INVALID_PARAMS() -> i32 { PmcpErrorCode::InvalidParams.code() }
+    fn INVALID_PARAMS() -> i32 { PcpErrorCode::InvalidParams.code() }
 
     #[classattr]
-    fn INTERNAL_ERROR() -> i32 { PmcpErrorCode::InternalError.code() }
+    fn INTERNAL_ERROR() -> i32 { PcpErrorCode::InternalError.code() }
 
     #[classattr]
-    fn SHADOW_BLOCKED() -> i32 { PmcpErrorCode::ShadowBlocked.code() }
+    fn SHADOW_BLOCKED() -> i32 { PcpErrorCode::ShadowBlocked.code() }
 
     #[classattr]
-    fn CONSTITUTION_BLOCKED() -> i32 { PmcpErrorCode::ConstitutionBlocked.code() }
+    fn CONSTITUTION_BLOCKED() -> i32 { PcpErrorCode::ConstitutionBlocked.code() }
 
     #[classattr]
-    fn LEASE_REQUIRED() -> i32 { PmcpErrorCode::LeaseRequired.code() }
+    fn LEASE_REQUIRED() -> i32 { PcpErrorCode::LeaseRequired.code() }
 
     #[classattr]
-    fn ESTOP_ACTIVE() -> i32 { PmcpErrorCode::EstopActive.code() }
+    fn ESTOP_ACTIVE() -> i32 { PcpErrorCode::EstopActive.code() }
 }
 
 // ============================================================================
@@ -505,7 +505,7 @@ fn server_status(robot_id: String, uptime_s: f64, call_count: u64, blocked_count
     Ok(PyServerStatus {
         inner: ServerStatus {
             robot_id,
-            pmcp_version: PMCP_VERSION.to_string(),
+            pcp_version: PCP_VERSION.to_string(),
             uptime_s,
             call_count,
             blocked_count,

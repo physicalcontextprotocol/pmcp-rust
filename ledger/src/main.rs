@@ -4,11 +4,11 @@ use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use std::sync::Arc;
 
-use pmcp_ledger::{LedgerAPI, LedgerConfig};
+use pcp_ledger::{LedgerAPI, LedgerConfig};
 
 #[derive(Parser, Debug)]
-#[command(name = "pmcp-ledger")]
-#[command(about = "P-MCP Distributed Digital Twin Ledger", long_about = None)]
+#[command(name = "pcp-ledger")]
+#[command(about = "PCP Distributed Digital Twin Ledger", long_about = None)]
 struct Args {
     #[arg(long, default_value = "0.0.0.0")]
     host: String,
@@ -50,7 +50,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     tracing_subscriber::registry()
         .with(tracing_subscriber::fmt::layer())
         .with(tracing_subscriber::EnvFilter::new(format!(
-            "pmcp_ledger={},{}",
+            "pcp_ledger={},{}",
             log_level,
             if log_level == tracing::Level::DEBUG {
                 "debug"
@@ -60,7 +60,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         )))
         .init();
 
-    tracing::info!("Starting P-MCP Ledger - Distributed Digital Twin");
+    tracing::info!("Starting PCP Ledger - Distributed Digital Twin");
 
     let config = LedgerConfig {
         node_id: args.node_id.unwrap_or_else(|| uuid::Uuid::new_v4().to_string()),
@@ -132,7 +132,7 @@ async fn handle_request(ledger: &LedgerAPI, request: &str) -> String {
                 let name = parts[2].to_string();
                 let robot_type = parts[3].to_string();
 
-                let registration = pmcp_ledger::state::RobotRegistration::new(robot_id, name, robot_type);
+                let registration = pcp_ledger::state::RobotRegistration::new(robot_id, name, robot_type);
 
                 match ledger.register_robot(registration).await {
                     Ok(id) => format!("OK:{}", id),

@@ -1,4 +1,4 @@
-//! P-MCP Safety Module
+//! PCP Safety Module
 //!
 //! Safety Constitution and Shadow Validation
 

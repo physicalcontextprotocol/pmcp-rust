@@ -1,4 +1,4 @@
-//! P-MCP Lease Management
+//! PCP Lease Management
 //!
 //! Temporal zone ownership. Competing requests for an occupied zone are
 //! resolved by a simple first-price comparison (highest bid_energy_j wins;

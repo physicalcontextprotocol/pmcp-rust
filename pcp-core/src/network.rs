@@ -1,4 +1,4 @@
-//! P-MCP Network Transport Layer
+//! PCP Network Transport Layer
 //!
 //! Supports stdio, HTTP/SSE, WebSocket, TCP, QUIC transports.
 //! Each transport implements the `Transport` trait for plug-and-play use.
@@ -15,7 +15,7 @@ use tokio::net::{TcpListener, TcpStream};
 use tokio::sync::{broadcast, mpsc, Mutex};
 use tracing::{debug, error, info};
 
-use crate::error::{PmcpError, PmcpErrorCode};
+use crate::error::{PcpError, PcpErrorCode};
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  TRANSPORT TRAIT
@@ -31,7 +31,7 @@ pub trait Transport: Send + Sync + 'static {
             mpsc::Sender<Value>,    // outbound → peer
             mpsc::Receiver<Value>,  // inbound ← peer
         ),
-        PmcpError,
+        PcpError,
     >;
     fn name(&self) -> &'static str;
 }
@@ -44,7 +44,7 @@ pub struct StdioTransport;
 
 #[async_trait]
 impl Transport for StdioTransport {
-    async fn connect(&self) -> Result<(mpsc::Sender<Value>, mpsc::Receiver<Value>), PmcpError> {
+    async fn connect(&self) -> Result<(mpsc::Sender<Value>, mpsc::Receiver<Value>), PcpError> {
         let (out_tx, mut out_rx) = mpsc::channel::<Value>(256);
         let (in_tx, in_rx) = mpsc::channel::<Value>(256);
 
@@ -117,9 +117,9 @@ impl TcpServerTransport {
 
 #[async_trait]
 impl Transport for TcpServerTransport {
-    async fn connect(&self) -> Result<(mpsc::Sender<Value>, mpsc::Receiver<Value>), PmcpError> {
+    async fn connect(&self) -> Result<(mpsc::Sender<Value>, mpsc::Receiver<Value>), PcpError> {
         let listener = TcpListener::bind(self.addr).await
-            .map_err(|e| PmcpError::with_message(PmcpErrorCode::InternalError, e.to_string()))?;
+            .map_err(|e| PcpError::with_message(PcpErrorCode::InternalError, e.to_string()))?;
 
         info!("TCP transport listening on {}", self.addr);
 
@@ -153,9 +153,9 @@ impl TcpClientTransport {
 
 #[async_trait]
 impl Transport for TcpClientTransport {
-    async fn connect(&self) -> Result<(mpsc::Sender<Value>, mpsc::Receiver<Value>), PmcpError> {
+    async fn connect(&self) -> Result<(mpsc::Sender<Value>, mpsc::Receiver<Value>), PcpError> {
         let stream = TcpStream::connect(self.addr).await
-            .map_err(|e| PmcpError::with_message(PmcpErrorCode::InternalError, e.to_string()))?;
+            .map_err(|e| PcpError::with_message(PcpErrorCode::InternalError, e.to_string()))?;
 
         info!("TCP connected to {}", self.addr);
 
@@ -226,7 +226,7 @@ impl WebSocketTransport {
 // for now, delegate to TCP with a WS upgrade handshake stub.
 #[async_trait]
 impl Transport for WebSocketTransport {
-    async fn connect(&self) -> Result<(mpsc::Sender<Value>, mpsc::Receiver<Value>), PmcpError> {
+    async fn connect(&self) -> Result<(mpsc::Sender<Value>, mpsc::Receiver<Value>), PcpError> {
         // Use underlying TCP for now; real impl would do the HTTP upgrade.
         TcpServerTransport::new(self.addr).connect().await
     }
@@ -250,7 +250,7 @@ impl MultiplexedTransport {
 
 #[async_trait]
 impl Transport for MultiplexedTransport {
-    async fn connect(&self) -> Result<(mpsc::Sender<Value>, mpsc::Receiver<Value>), PmcpError> {
+    async fn connect(&self) -> Result<(mpsc::Sender<Value>, mpsc::Receiver<Value>), PcpError> {
         let (out_tx, out_rx) = mpsc::channel::<Value>(1024);
         let (in_tx, in_rx) = mpsc::channel::<Value>(1024);
 

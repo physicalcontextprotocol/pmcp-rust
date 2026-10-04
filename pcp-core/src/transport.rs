@@ -1,4 +1,4 @@
-//! P-MCP Transport Layer
+//! PCP Transport Layer
 //!
 //! Handles all transport mechanisms: stdio, HTTP, WebSocket, and custom transports
 
@@ -8,8 +8,8 @@ use tokio::sync::{mpsc, RwLock, broadcast};
 use tokio::net::{TcpListener, TcpStream};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use serde::{Deserialize, Serialize};
-use crate::error::{PmcpError, PmcpErrorCode};
-use crate::types::{JsonRpcRequest, JsonRpcResponse, PMCP_VERSION};
+use crate::error::{PcpError, PcpErrorCode};
+use crate::types::{JsonRpcRequest, JsonRpcResponse, PCP_VERSION};
 
 /// Transport type enumeration
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -32,7 +32,7 @@ pub struct TransportMessage {
 /// Transport trait for custom implementations
 pub trait Transport: Send + Sync {
     fn transport_type(&self) -> TransportType;
-    fn send(&self, data: serde_json::Value) -> impl std::future::Future<Output = Result<(), PmcpError>> + '_;
+    fn send(&self, data: serde_json::Value) -> impl std::future::Future<Output = Result<(), PcpError>> + '_;
     fn close(&self) -> impl std::future::Future<Output = ()> + '_;
 }
 
@@ -61,12 +61,12 @@ impl StdioTransport {
         }
     }
 
-    pub async fn write_message(&self, msg: serde_json::Value) -> Result<(), PmcpError> {
+    pub async fn write_message(&self, msg: serde_json::Value) -> Result<(), PcpError> {
         if *self.closed.read().await {
-            return Err(PmcpError::internal_error("Transport closed"));
+            return Err(PcpError::internal_error("Transport closed"));
         }
-        let data = serde_json::to_string(&msg).map_err(|e| PmcpError::internal_error(e.to_string()))?;
-        self.writer.send(data).await.map_err(|e| PmcpError::internal_error(e.to_string()))?;
+        let data = serde_json::to_string(&msg).map_err(|e| PcpError::internal_error(e.to_string()))?;
+        self.writer.send(data).await.map_err(|e| PcpError::internal_error(e.to_string()))?;
         Ok(())
     }
 
@@ -118,11 +118,11 @@ impl HttpTransport {
         *self.closed.write().await = true;
     }
 
-    pub async fn start_server(&self) -> Result<(), PmcpError> {
+    pub async fn start_server(&self) -> Result<(), PcpError> {
         let addr = format!("{}:{}", self.host, self.port);
-        let listener = TcpListener::bind(&addr).await.map_err(|e| PmcpError::internal_error(e.to_string()))?;
+        let listener = TcpListener::bind(&addr).await.map_err(|e| PcpError::internal_error(e.to_string()))?;
         
-        tracing::info!("[HTTP Transport] Listening on http://{}/pmcp", addr);
+        tracing::info!("[HTTP Transport] Listening on http://{}/pcp", addr);
 
         loop {
             if *self.closed.read().await {
@@ -146,7 +146,7 @@ impl HttpTransport {
         Ok(())
     }
 
-    async fn handle_connection(mut stream: TcpStream, closed: Arc<RwLock<bool>>, prefix: &str) -> Result<(), PmcpError> {
+    async fn handle_connection(mut stream: TcpStream, closed: Arc<RwLock<bool>>, prefix: &str) -> Result<(), PcpError> {
         let mut buffer = [0u8; 8192];
         
         loop {
@@ -223,13 +223,13 @@ impl WebSocketTransport {
         let _ = self.event_sender.send(msg);
     }
 
-    pub async fn send_to(&self, client_id: &str, msg: serde_json::Value) -> Result<(), PmcpError> {
+    pub async fn send_to(&self, client_id: &str, msg: serde_json::Value) -> Result<(), PcpError> {
         let connections = self.connections.read().await;
         if let Some(sender) = connections.get(client_id) {
-            sender.send(msg).await.map_err(|e| PmcpError::internal_error(e.to_string()))?;
+            sender.send(msg).await.map_err(|e| PcpError::internal_error(e.to_string()))?;
             Ok(())
         } else {
-            Err(PmcpError::invalid_params(format!("Client not found: {}", client_id)))
+            Err(PcpError::invalid_params(format!("Client not found: {}", client_id)))
         }
     }
 
@@ -259,33 +259,33 @@ impl TcpTransport {
         }
     }
 
-    pub async fn connect(&self, addr: &str) -> Result<String, PmcpError> {
-        let stream = TcpStream::connect(addr).await.map_err(|e| PmcpError::internal_error(e.to_string()))?;
+    pub async fn connect(&self, addr: &str) -> Result<String, PcpError> {
+        let stream = TcpStream::connect(addr).await.map_err(|e| PcpError::internal_error(e.to_string()))?;
         let id = format!("tcp-{}", uuid::Uuid::new_v4());
         self.connections.write().await.insert(id.clone(), stream);
         Ok(id)
     }
 
-    pub async fn send(&self, client_id: &str, data: serde_json::Value) -> Result<(), PmcpError> {
+    pub async fn send(&self, client_id: &str, data: serde_json::Value) -> Result<(), PcpError> {
         // tokio::net::TcpStream has no try_clone() (that's the std/blocking
         // API); take a write lock and use get_mut() for direct &mut access
         // instead of attempting to clone the stream.
         let mut connections = self.connections.write().await;
         if let Some(stream) = connections.get_mut(client_id) {
-            let bytes = serde_json::to_vec(&data).map_err(|e| PmcpError::internal_error(e.to_string()))?;
+            let bytes = serde_json::to_vec(&data).map_err(|e| PcpError::internal_error(e.to_string()))?;
             
             // Frame: 4-byte length + JSON
             let mut frame = (bytes.len() as u32).to_be_bytes().to_vec();
             frame.extend(bytes);
             
-            stream.write_all(&frame).await.map_err(|e| PmcpError::internal_error(e.to_string()))?;
+            stream.write_all(&frame).await.map_err(|e| PcpError::internal_error(e.to_string()))?;
             Ok(())
         } else {
-            Err(PmcpError::invalid_params(format!("Connection not found: {}", client_id)))
+            Err(PcpError::invalid_params(format!("Connection not found: {}", client_id)))
         }
     }
 
-    pub async fn receive(&self, client_id: &str) -> Result<Option<serde_json::Value>, PmcpError> {
+    pub async fn receive(&self, client_id: &str) -> Result<Option<serde_json::Value>, PcpError> {
         let mut connections = self.connections.write().await;
         if let Some(stream) = connections.get_mut(client_id) {
             let mut length_buf = [0u8; 4];
@@ -293,7 +293,7 @@ impl TcpTransport {
                 Ok(_) => {
                     let length = u32::from_be_bytes(length_buf) as usize;
                     let mut data_buf = vec![0u8; length];
-                    stream.read_exact(&mut data_buf).await.map_err(|e| PmcpError::internal_error(e.to_string()))?;
+                    stream.read_exact(&mut data_buf).await.map_err(|e| PcpError::internal_error(e.to_string()))?;
                     Ok(serde_json::from_slice(&data_buf).ok())
                 }
                 Err(_) => Ok(None),
@@ -341,7 +341,7 @@ impl TransportManager {
     }
 
     pub fn with_http(mut self, host: &str, port: u16) -> Self {
-        self.http = Some(HttpTransport::new(host, port, "/pmcp"));
+        self.http = Some(HttpTransport::new(host, port, "/pcp"));
         self
     }
 
@@ -355,20 +355,20 @@ impl TransportManager {
         self
     }
 
-    pub async fn start_stdio(&mut self) -> Result<(), PmcpError> {
+    pub async fn start_stdio(&mut self) -> Result<(), PcpError> {
         if let Some(stdio) = &self.stdio {
             tracing::info!("[Transport Manager] Stdio transport ready");
             Ok(())
         } else {
-            Err(PmcpError::invalid_params("Stdio transport not configured"))
+            Err(PcpError::invalid_params("Stdio transport not configured"))
         }
     }
 
-    pub async fn start_http(&mut self) -> Result<(), PmcpError> {
+    pub async fn start_http(&mut self) -> Result<(), PcpError> {
         if let Some(http) = &self.http {
             http.start_server().await
         } else {
-            Err(PmcpError::invalid_params("HTTP transport not configured"))
+            Err(PcpError::invalid_params("HTTP transport not configured"))
         }
     }
 

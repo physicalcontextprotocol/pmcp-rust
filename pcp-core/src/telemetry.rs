@@ -1,4 +1,4 @@
-//! P-MCP Telemetry & Observability
+//! PCP Telemetry & Observability
 //!
 //! OpenTelemetry-compatible spans, metrics export, structured events,
 //! and Prometheus-format scrape endpoint.
@@ -468,7 +468,7 @@ impl TelemetryPipeline {
         ].into();
 
         self.metrics.counter_inc(
-            "pmcp_actuation_total",
+            "pcp_actuation_total",
             labels.clone(),
             "Total actuations executed",
             1,
@@ -476,7 +476,7 @@ impl TelemetryPipeline {
 
         let boundaries = vec![1.0, 5.0, 10.0, 25.0, 50.0, 100.0, 250.0, 500.0, 1000.0];
         self.metrics.histogram_observe(
-            "pmcp_actuation_duration_ms",
+            "pcp_actuation_duration_ms",
             labels.clone(),
             "Actuation duration in milliseconds",
             &boundaries,
@@ -487,7 +487,7 @@ impl TelemetryPipeline {
             ("robot_id".to_string(), robot_id.to_string()),
         ].into();
         self.metrics.gauge_add(
-            "pmcp_energy_used_joules",
+            "pcp_energy_used_joules",
             energy_labels,
             "Cumulative energy used by robot",
             energy_j,
@@ -506,7 +506,7 @@ impl TelemetryPipeline {
         ].into();
 
         self.metrics.counter_inc(
-            "pmcp_safety_violations_total",
+            "pcp_safety_violations_total",
             labels,
             "Total safety violations detected",
             1,

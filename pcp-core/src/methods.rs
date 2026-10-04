@@ -1,11 +1,11 @@
-//! P-MCP JSON-RPC Method Handlers
+//! PCP JSON-RPC Method Handlers
 //!
-//! Implements all MCP standard methods and P-MCP physical extensions
+//! Implements all MCP standard methods and PCP physical extensions
 
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use crate::types::*;
-use crate::error::PmcpError;
+use crate::error::PcpError;
 use crate::lease::LeaseManager;
 use crate::safety::SafetyMiddleware;
 
@@ -68,7 +68,7 @@ impl HandlerContext {
 // ============================================================================
 
 /// Initialize handler
-pub async fn handle_initialize(ctx: &mut HandlerContext, params: &serde_json::Value) -> Result<serde_json::Value, PmcpError> {
+pub async fn handle_initialize(ctx: &mut HandlerContext, params: &serde_json::Value) -> Result<serde_json::Value, PcpError> {
     let client_info = params.get("clientInfo")
         .and_then(|v| v.as_object())
         .map(|o| {
@@ -91,8 +91,8 @@ pub async fn handle_initialize(ctx: &mut HandlerContext, params: &serde_json::Va
             "name": ctx.name,
             "version": ctx.version,
         },
-        "pmcp": {
-            "version": PMCP_VERSION,
+        "pcp": {
+            "version": PCP_VERSION,
             "robotId": ctx.robot_id,
             "identity": serde_json::to_value(&ctx.identity).unwrap_or(serde_json::Value::Null),
             "constitution": ctx.safety.read().await.constitution.fingerprint.chars().take(16).collect::<String>() + "...",
@@ -101,7 +101,7 @@ pub async fn handle_initialize(ctx: &mut HandlerContext, params: &serde_json::Va
 }
 
 /// Ping handler
-pub async fn handle_ping(ctx: &HandlerContext, _params: &serde_json::Value) -> Result<serde_json::Value, PmcpError> {
+pub async fn handle_ping(ctx: &HandlerContext, _params: &serde_json::Value) -> Result<serde_json::Value, PcpError> {
     Ok(serde_json::json!({
         "pong": true,
         "ts": chrono::Utc::now().timestamp(),
@@ -110,7 +110,7 @@ pub async fn handle_ping(ctx: &HandlerContext, _params: &serde_json::Value) -> R
 }
 
 /// Tools list handler
-pub async fn handle_tools_list(ctx: &HandlerContext, _params: &serde_json::Value) -> Result<serde_json::Value, PmcpError> {
+pub async fn handle_tools_list(ctx: &HandlerContext, _params: &serde_json::Value) -> Result<serde_json::Value, PcpError> {
     let actuations = ctx.actuations.read().await;
     let tools: Vec<serde_json::Value> = actuations.iter()
         .map(|spec| spec.to_mcp_tool())
@@ -119,10 +119,10 @@ pub async fn handle_tools_list(ctx: &HandlerContext, _params: &serde_json::Value
 }
 
 /// Tools call handler
-pub async fn handle_tools_call(ctx: &mut HandlerContext, params: &serde_json::Value) -> Result<serde_json::Value, PmcpError> {
+pub async fn handle_tools_call(ctx: &mut HandlerContext, params: &serde_json::Value) -> Result<serde_json::Value, PcpError> {
     let name = params.get("name")
         .and_then(|v| v.as_str())
-        .ok_or_else(|| PmcpError::invalid_params("Missing 'name' parameter"))?;
+        .ok_or_else(|| PcpError::invalid_params("Missing 'name' parameter"))?;
 
     let arguments = params.get("arguments")
         .and_then(|v| v.as_object())
@@ -137,7 +137,7 @@ pub async fn handle_tools_call(ctx: &mut HandlerContext, params: &serde_json::Va
     let actuations = ctx.actuations.read().await;
     let spec = actuations.iter()
         .find(|s| s.name == name)
-        .ok_or_else(|| PmcpError::method_not_found(name))?;
+        .ok_or_else(|| PcpError::method_not_found(name))?;
     let requires_lease = spec.requires_lease;
     let shadow_required = spec.shadow_required;
     drop(actuations);
@@ -155,8 +155,8 @@ pub async fn handle_tools_call(ctx: &mut HandlerContext, params: &serde_json::Va
         let (lease_ok, lease_reason) = ctx.lease_mgr.check(lease_token, zid, fence_token).await;
         if !lease_ok {
             ctx.increment_blocked_count();
-            let mut err = PmcpError::with_message(
-                crate::error::PmcpErrorCode::LeaseRequired, lease_reason.clone());
+            let mut err = PcpError::with_message(
+                crate::error::PcpErrorCode::LeaseRequired, lease_reason.clone());
             err.data = Some(serde_json::json!({"violations": [lease_reason]}));
             return Err(err);
         }
@@ -171,13 +171,13 @@ pub async fn handle_tools_call(ctx: &mut HandlerContext, params: &serde_json::Va
     if !safe {
         ctx.increment_blocked_count();
         let code = if violations.iter().any(|v| v.contains("ESTOP")) {
-            crate::error::PmcpErrorCode::EstopActive
+            crate::error::PcpErrorCode::EstopActive
         } else if preview.is_some() {
-            crate::error::PmcpErrorCode::ShadowBlocked
+            crate::error::PcpErrorCode::ShadowBlocked
         } else {
-            crate::error::PmcpErrorCode::ConstitutionBlocked
+            crate::error::PcpErrorCode::ConstitutionBlocked
         };
-        let mut err = PmcpError::with_message(code, violations.join("; "));
+        let mut err = PcpError::with_message(code, violations.join("; "));
         err.data = Some(serde_json::json!({
             "violations": violations,
             "shadow": preview.map(|p| p.to_dict()),
@@ -211,7 +211,7 @@ pub async fn handle_tools_call(ctx: &mut HandlerContext, params: &serde_json::Va
 }
 
 /// Resources list handler
-pub async fn handle_resources_list(ctx: &HandlerContext, _params: &serde_json::Value) -> Result<serde_json::Value, PmcpError> {
+pub async fn handle_resources_list(ctx: &HandlerContext, _params: &serde_json::Value) -> Result<serde_json::Value, PcpError> {
     let sensors = ctx.sensors.read().await;
     let resources: Vec<serde_json::Value> = sensors.iter()
         .map(|spec| spec.to_mcp_resource())
@@ -220,10 +220,10 @@ pub async fn handle_resources_list(ctx: &HandlerContext, _params: &serde_json::V
 }
 
 /// Resources read handler
-pub async fn handle_resources_read(ctx: &HandlerContext, params: &serde_json::Value) -> Result<serde_json::Value, PmcpError> {
+pub async fn handle_resources_read(ctx: &HandlerContext, params: &serde_json::Value) -> Result<serde_json::Value, PcpError> {
     let uri = params.get("uri")
         .and_then(|v| v.as_str())
-        .ok_or_else(|| PmcpError::invalid_params("Missing 'uri' parameter"))?;
+        .ok_or_else(|| PcpError::invalid_params("Missing 'uri' parameter"))?;
 
     let sensors = ctx.sensors.read().await;
     let name = uri.split('/').last().unwrap_or(uri);
@@ -231,7 +231,7 @@ pub async fn handle_resources_read(ctx: &HandlerContext, params: &serde_json::Va
     // Find sensor - in real impl, would call sensor function
     let _spec = sensors.iter()
         .find(|s| s.name == name || s.uri() == uri)
-        .ok_or_else(|| PmcpError::method_not_found(&format!("Sensor not found: {}", uri)))?;
+        .ok_or_else(|| PcpError::method_not_found(&format!("Sensor not found: {}", uri)))?;
 
     // Return simulated reading
     let reading = SensorReading {
@@ -246,14 +246,14 @@ pub async fn handle_resources_read(ctx: &HandlerContext, params: &serde_json::Va
 }
 
 // ============================================================================
-// P-MCP Extension Methods
+// PCP Extension Methods
 // ============================================================================
 
 /// Shadow preview handler
-pub async fn handle_shadow_preview(ctx: &HandlerContext, params: &serde_json::Value) -> Result<serde_json::Value, PmcpError> {
+pub async fn handle_shadow_preview(ctx: &HandlerContext, params: &serde_json::Value) -> Result<serde_json::Value, PcpError> {
     let name = params.get("name")
         .and_then(|v| v.as_str())
-        .ok_or_else(|| PmcpError::invalid_params("Missing 'name' parameter"))?;
+        .ok_or_else(|| PcpError::invalid_params("Missing 'name' parameter"))?;
 
     let arguments = params.get("arguments")
         .and_then(|v| v.as_object())
@@ -277,7 +277,7 @@ pub async fn handle_shadow_preview(ctx: &HandlerContext, params: &serde_json::Va
 }
 
 /// Lease request handler
-pub async fn handle_lease_request(ctx: &HandlerContext, params: &serde_json::Value) -> Result<serde_json::Value, PmcpError> {
+pub async fn handle_lease_request(ctx: &HandlerContext, params: &serde_json::Value) -> Result<serde_json::Value, PcpError> {
     let robot_id = params.get("robot_id")
         .and_then(|v| v.as_str())
         .unwrap_or(&ctx.robot_id);
@@ -311,10 +311,10 @@ pub async fn handle_lease_request(ctx: &HandlerContext, params: &serde_json::Val
 }
 
 /// Lease release handler
-pub async fn handle_lease_release(ctx: &HandlerContext, params: &serde_json::Value) -> Result<serde_json::Value, PmcpError> {
+pub async fn handle_lease_release(ctx: &HandlerContext, params: &serde_json::Value) -> Result<serde_json::Value, PcpError> {
     let lease_id = params.get("lease_id")
         .and_then(|v| v.as_str())
-        .ok_or_else(|| PmcpError::invalid_params("Missing 'lease_id' parameter"))?;
+        .ok_or_else(|| PcpError::invalid_params("Missing 'lease_id' parameter"))?;
 
     let released = ctx.lease_mgr.release(lease_id).await;
     Ok(serde_json::json!({ "released": released, "lease_id": lease_id }))
@@ -324,7 +324,7 @@ pub async fn handle_lease_release(ctx: &HandlerContext, params: &serde_json::Val
 /// Response is a schema-conformant EStopMessage (robot_id, triggered_at,
 /// stop_category, source) when triggering; a simple ack when clearing.
 /// stop_category is always 0 (schema: const 0 on this message type).
-pub async fn handle_estop(ctx: &HandlerContext, params: &serde_json::Value) -> Result<serde_json::Value, PmcpError> {
+pub async fn handle_estop(ctx: &HandlerContext, params: &serde_json::Value) -> Result<serde_json::Value, PcpError> {
     let active = params.get("active").and_then(|v| v.as_bool()).unwrap_or(true);
     let robot_id = params.get("robot_id").and_then(|v| v.as_str()).unwrap_or(&ctx.robot_id);
     let source = params.get("source").and_then(|v| v.as_str());
@@ -350,13 +350,13 @@ pub async fn handle_estop(ctx: &HandlerContext, params: &serde_json::Value) -> R
 }
 
 /// Status handler
-pub async fn handle_status(ctx: &HandlerContext, _params: &serde_json::Value) -> Result<serde_json::Value, PmcpError> {
+pub async fn handle_status(ctx: &HandlerContext, _params: &serde_json::Value) -> Result<serde_json::Value, PcpError> {
     let actuations = ctx.actuations.read().await;
     let sensors = ctx.sensors.read().await;
 
     Ok(serde_json::json!({
         "robot_id": ctx.robot_id,
-        "pmcp_version": PMCP_VERSION,
+        "pcp_version": PCP_VERSION,
         "uptime_s": ctx.uptime(),
         "call_count": ctx.call_count,
         "blocked_count": ctx.blocked_count,
@@ -371,19 +371,19 @@ pub async fn handle_status(ctx: &HandlerContext, _params: &serde_json::Value) ->
 }
 
 /// Identity handler
-pub async fn handle_identity(ctx: &HandlerContext, _params: &serde_json::Value) -> Result<serde_json::Value, PmcpError> {
+pub async fn handle_identity(ctx: &HandlerContext, _params: &serde_json::Value) -> Result<serde_json::Value, PcpError> {
     serde_json::to_value(&ctx.identity)
-        .map_err(|e| PmcpError::internal_error(e.to_string()))
+        .map_err(|e| PcpError::internal_error(e.to_string()))
 }
 
 /// Constitution handler
-pub async fn handle_constitution(ctx: &HandlerContext, _params: &serde_json::Value) -> Result<serde_json::Value, PmcpError> {
+pub async fn handle_constitution(ctx: &HandlerContext, _params: &serde_json::Value) -> Result<serde_json::Value, PcpError> {
     let safety = ctx.safety.read().await;
     Ok(safety.constitution.summary())
 }
 
 /// Logging set level handler
-pub async fn handle_logging_set_level(_ctx: &HandlerContext, params: &serde_json::Value) -> Result<serde_json::Value, PmcpError> {
+pub async fn handle_logging_set_level(_ctx: &HandlerContext, params: &serde_json::Value) -> Result<serde_json::Value, PcpError> {
     let level = params.get("level")
         .and_then(|v| v.as_str())
         .unwrap_or("info");

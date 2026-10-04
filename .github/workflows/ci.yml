@@ -3,8 +3,8 @@ name: pmcp-rust CI
 # Two crates with very different states, and this workflow is explicit
 # about which is which:
 #
-#   pmcp-core  — builds clean, 43 unit tests pass. BLOCKING.
-#   pmcp-ledger — does NOT compile. 19 pre-existing type errors in the
+#   pcp-core  — builds clean, 43 unit tests pass. BLOCKING.
+#   pcp-ledger — does NOT compile. 19 pre-existing type errors in the
 #                 CRDT layer. NON-BLOCKING, and commented as such.
 #
 # The ledger is deliberately not hidden behind `|| true`. It is a
@@ -30,10 +30,10 @@ permissions:
 jobs:
 
   # ===========================================================================
-  # pmcp-core — BLOCKING
+  # pcp-core — BLOCKING
   # ===========================================================================
   core-build:
-    name: pmcp-core / build + test
+    name: pcp-core / build + test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -44,15 +44,15 @@ jobs:
       - name: Cache Cargo
         uses: Swatinem/rust-cache@v2
         with:
-          workspaces: pmcp-core -> target
-          key: pmcp-core
+          workspaces: pcp-core -> target
+          key: pcp-core
 
       - name: Build
-        working-directory: pmcp-core
+        working-directory: pcp-core
         run: cargo build --release
 
       - name: Test
-        working-directory: pmcp-core
+        working-directory: pcp-core
         run: cargo test
 
       # A plain `cargo build` must not require a Python interpreter.
@@ -62,7 +62,7 @@ jobs:
       # an unconditional dependency, this job starts failing on a runner
       # with no CPython headers — which is exactly the point.
       - name: Confirm no Python interpreter is required for the default build
-        working-directory: pmcp-core
+        working-directory: pcp-core
         env:
           PYO3_PYTHON: ""
         run: |
@@ -76,10 +76,10 @@ jobs:
           echo "pyo3 is correctly gated behind an optional feature"
 
   # ===========================================================================
-  # pmcp-ledger — NON-BLOCKING, known broken
+  # pcp-ledger — NON-BLOCKING, known broken
   # ===========================================================================
   ledger-build:
-    name: pmcp-ledger (known broken — non-blocking)
+    name: pcp-ledger (known broken — non-blocking)
     runs-on: ubuntu-latest
     continue-on-error: true
     steps:
@@ -92,7 +92,7 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: ledger -> target
-          key: pmcp-ledger
+          key: pcp-ledger
 
       - name: Build
         working-directory: ledger
@@ -117,6 +117,6 @@ jobs:
           echo "| core-build   | **yes** | ${{ needs.core-build.result }}   |" >> "$GITHUB_STEP_SUMMARY"
           echo "| ledger-build | no      | ${{ needs.ledger-build.result }} |" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "\`ledger-build\` is expected to fail. \`pmcp-ledger\` has 19" >> "$GITHUB_STEP_SUMMARY"
+          echo "\`ledger-build\` is expected to fail. \`pcp-ledger\` has 19" >> "$GITHUB_STEP_SUMMARY"
           echo "open type errors, enumerated in \`CHANGELOG.md\`. A pass here" >> "$GITHUB_STEP_SUMMARY"
           echo "is good news: please make the build blocking in the same PR." >> "$GITHUB_STEP_SUMMARY"

@@ -1,7 +1,7 @@
-//! P-MCP DID (Decentralized Identity) and Cryptographic Security Module
+//! PCP DID (Decentralized Identity) and Cryptographic Security Module
 //!
 //! Implements:
-//! - DID:PMCP method (did:pmcp:<robot-id>)
+//! - DID:PCP method (did:pcp:<robot-id>)
 //! - Ed25519 key pairs and signatures
 //! - mTLS certificate generation helpers
 //! - JWT-style capability tokens
@@ -15,13 +15,13 @@ use sha2::{Digest, Sha256};
 use ed25519_dalek::{SigningKey, VerifyingKey, Signature, Signer, Verifier};
 use rand::rngs::OsRng;
 
-use crate::error::{PmcpError, PmcpErrorCode};
+use crate::error::{PcpError, PcpErrorCode};
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  DID METHOD
 // ─────────────────────────────────────────────────────────────────────────────
 
-pub const DID_METHOD: &str = "pmcp";
+pub const DID_METHOD: &str = "pcp";
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub struct Did {
@@ -37,11 +37,11 @@ impl Did {
         }
     }
 
-    pub fn parse(did_str: &str) -> Result<Self, PmcpError> {
+    pub fn parse(did_str: &str) -> Result<Self, PcpError> {
         let parts: Vec<&str> = did_str.splitn(3, ':').collect();
         if parts.len() != 3 || parts[0] != "did" {
-            return Err(PmcpError::with_message(
-                PmcpErrorCode::InvalidParams,
+            return Err(PcpError::with_message(
+                PcpErrorCode::InvalidParams,
                 format!("Invalid DID format: {}", did_str),
             ));
         }
@@ -155,14 +155,14 @@ impl RobotIdentity {
     }
 
     /// Verify a hex-encoded signature over payload with this identity's public key.
-    pub fn verify(&self, payload: &[u8], sig_hex: &str) -> Result<(), PmcpError> {
+    pub fn verify(&self, payload: &[u8], sig_hex: &str) -> Result<(), PcpError> {
         let sig_bytes = hex::decode(sig_hex)
-            .map_err(|e| PmcpError::with_message(PmcpErrorCode::InvalidParams, e.to_string()))?;
+            .map_err(|e| PcpError::with_message(PcpErrorCode::InvalidParams, e.to_string()))?;
         let sig_arr: [u8; 64] = sig_bytes.try_into()
-            .map_err(|_| PmcpError::with_message(PmcpErrorCode::InvalidParams, "Signature must be 64 bytes".to_string()))?;
+            .map_err(|_| PcpError::with_message(PcpErrorCode::InvalidParams, "Signature must be 64 bytes".to_string()))?;
         let sig = Signature::from_bytes(&sig_arr);
         self.keypair.verifying_key().verify(payload, &sig)
-            .map_err(|_| PmcpError::with_message(PmcpErrorCode::SignatureInvalid, "Signature verification failed".to_string()))
+            .map_err(|_| PcpError::with_message(PcpErrorCode::SignatureInvalid, "Signature verification failed".to_string()))
     }
 
     pub fn public_key_hex(&self) -> String {
@@ -213,17 +213,17 @@ impl CapabilityToken {
         token
     }
 
-    pub fn verify(&self, identity: &RobotIdentity) -> Result<(), PmcpError> {
+    pub fn verify(&self, identity: &RobotIdentity) -> Result<(), PcpError> {
         if self.issuer != identity.did.to_string() {
-            return Err(PmcpError::with_message(
-                PmcpErrorCode::SignatureInvalid,
+            return Err(PcpError::with_message(
+                PcpErrorCode::SignatureInvalid,
                 "Token issuer mismatch".to_string(),
             ));
         }
         let now = now_secs();
         if now > self.expires_at {
-            return Err(PmcpError::with_message(
-                PmcpErrorCode::TokenExpired,
+            return Err(PcpError::with_message(
+                PcpErrorCode::TokenExpired,
                 "Capability token has expired".to_string(),
             ));
         }
@@ -291,37 +291,37 @@ impl DidRegistry {
         did: &str,
         payload: &[u8],
         sig_hex: &str,
-    ) -> Result<(), PmcpError> {
+    ) -> Result<(), PcpError> {
         let doc = self.resolve(did).await
-            .ok_or_else(|| PmcpError::with_message(
-                PmcpErrorCode::NotFound,
+            .ok_or_else(|| PcpError::with_message(
+                PcpErrorCode::NotFound,
                 format!("DID {} not found in registry", did),
             ))?;
 
         let vm = doc.verification_method.first()
-            .ok_or_else(|| PmcpError::with_message(
-                PmcpErrorCode::InvalidParams,
+            .ok_or_else(|| PcpError::with_message(
+                PcpErrorCode::InvalidParams,
                 "No verification method in DID document".to_string(),
             ))?;
 
         let pub_bytes = hex::decode(&vm.public_key_hex)
-            .map_err(|e| PmcpError::with_message(PmcpErrorCode::InvalidParams, e.to_string()))?;
+            .map_err(|e| PcpError::with_message(PcpErrorCode::InvalidParams, e.to_string()))?;
         let pub_arr: [u8; 32] = pub_bytes.try_into()
-            .map_err(|_| PmcpError::with_message(PmcpErrorCode::InvalidParams, "Public key must be 32 bytes".to_string()))?;
+            .map_err(|_| PcpError::with_message(PcpErrorCode::InvalidParams, "Public key must be 32 bytes".to_string()))?;
 
         let public_key = VerifyingKey::from_bytes(&pub_arr)
-            .map_err(|e| PmcpError::with_message(PmcpErrorCode::InvalidParams, e.to_string()))?;
+            .map_err(|e| PcpError::with_message(PcpErrorCode::InvalidParams, e.to_string()))?;
 
         let sig_bytes = hex::decode(sig_hex)
-            .map_err(|e| PmcpError::with_message(PmcpErrorCode::InvalidParams, e.to_string()))?;
+            .map_err(|e| PcpError::with_message(PcpErrorCode::InvalidParams, e.to_string()))?;
         let sig_arr: [u8; 64] = sig_bytes.try_into()
-            .map_err(|_| PmcpError::with_message(PmcpErrorCode::InvalidParams, "Signature must be 64 bytes".to_string()))?;
+            .map_err(|_| PcpError::with_message(PcpErrorCode::InvalidParams, "Signature must be 64 bytes".to_string()))?;
 
         let sig = Signature::from_bytes(&sig_arr);
 
         public_key.verify(payload, &sig)
-            .map_err(|_| PmcpError::with_message(
-                PmcpErrorCode::SignatureInvalid,
+            .map_err(|_| PcpError::with_message(
+                PcpErrorCode::SignatureInvalid,
                 "DID signature verification failed".to_string(),
             ))
     }
@@ -369,7 +369,7 @@ impl ZkSafetyProver {
         &self,
         trajectory: &serde_json::Value,
         prover_did: &str,
-    ) -> Result<ZkProof, PmcpError> {
+    ) -> Result<ZkProof, PcpError> {
         // Compute a deterministic proof stub based on trajectory hash
         let mut hasher = Sha256::new();
         hasher.update(serde_json::to_vec(trajectory).unwrap_or_default());
