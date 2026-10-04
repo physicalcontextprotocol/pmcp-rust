@@ -3,8 +3,18 @@
 All notable changes to the Rust crates. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-Two crates with independent versions: `pmcp-core` (protocol core) and
-`pmcp-ledger` (CRDT ledger layer).
+Two crates with independent versions: `physicalcontextprotocol` (protocol core) and
+`physicalcontextprotocol-ledger` (CRDT ledger layer).
+
+## [Unreleased]
+
+### Changed
+- **Crates renamed.** `pmcp-core` -> `physicalcontextprotocol`,
+  `pmcp-ledger` -> `physicalcontextprotocol-ledger`. The library target is
+  now `physicalcontextprotocol` (was `pmcp_core`), so imports become
+  `use physicalcontextprotocol::...`. The ledger binary is still invoked as
+  `pmcp-ledger`. Nothing was published under the old names, so no alias or
+  deprecation shim is needed.
 
 ## [1.0.0] — 2026-09-28
 
