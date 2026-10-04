@@ -3,7 +3,7 @@ name = "physicalcontextprotocol-ledger"
 version = "1.0.0"
 edition = "2021"
 description = "PCP Distributed Digital Twin Ledger with 4D CRDT"
-authors = ["Sandeep THummala <physicalcontextprotocol@gmail.com>"]
+authors = ["Sandeep Thummala <physicalcontextprotocol@gmail.com>"]
 license = "Apache-2.0"
 repository = "https://github.com/physicalcontextprotocol/pmcp-rust"
 
