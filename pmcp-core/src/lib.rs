@@ -37,10 +37,12 @@ pub mod identity;
 pub mod python;
 
 pub use types::*;
-pub use server::PMCPServer;
+pub use server::{PMCPServer, PMCPServerBuilder};
 pub use error::{PmcpError, PmcpErrorCode};
 pub use consensus::{RaftNode, RaftConfig, FleetStateMachine, LogCommand, ConsensusCluster};
-pub use network::{Transport, StdioTransport, TcpServerTransport, ConnectionPool};
+pub use network::{
+    Transport, StdioTransport, TcpServerTransport, TcpClientTransport, ConnectionPool,
+};
 pub use rate_limit::{ActuationRateLimiter, EnergyBudgetTracker, PriorityScheduler};
 pub use telemetry::{TelemetryPipeline, MetricsRegistry, EventLog, StructuredEvent};
 pub use identity::{Did, DidDocument, RobotIdentity, CapabilityToken, DidRegistry, ZkSafetyProver};
