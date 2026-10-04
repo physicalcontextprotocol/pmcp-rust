@@ -1,8 +1,10 @@
 [package]
-name = "pmcp-ledger"
+name = "physicalcontextprotocol-ledger"
 version = "1.0.0"
 edition = "2021"
 description = "P-MCP Distributed Digital Twin Ledger with 4D CRDT"
+license = "Apache-2.0"
+repository = "https://github.com/physicalcontextprotocol/pmcp-rust"
 
 [dependencies]
 tokio = { version = "1.35", features = ["full"] }
@@ -35,7 +37,7 @@ version = "0.13"
 tokio-test = "0.4"
 
 [lib]
-name = "pmcp_ledger"
+name = "physicalcontextprotocol_ledger"
 path = "src/lib.rs"
 
 [[bin]]

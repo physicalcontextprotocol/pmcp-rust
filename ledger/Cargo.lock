@@ -884,6 +884,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "physicalcontextprotocol-ledger"
+version = "1.0.0"
+dependencies = [
+ "async-trait",
+ "bytes",
+ "chrono",
+ "etcd-client",
+ "parking_lot",
+ "redis",
+ "rusqlite",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "tokio",
+ "tokio-test",
+ "tracing",
+ "tracing-subscriber",
+ "uuid",
+]
+
+[[package]]
 name = "pin-project"
 version = "1.1.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -914,27 +935,6 @@ name = "pkg-config"
 version = "0.3.34"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f6b464fbc74e149a392436b17d523f769e057cb6877f6a5c4618bc6f11800548"
-
-[[package]]
-name = "pmcp-ledger"
-version = "1.0.0"
-dependencies = [
- "async-trait",
- "bytes",
- "chrono",
- "etcd-client",
- "parking_lot",
- "redis",
- "rusqlite",
- "serde",
- "serde_json",
- "thiserror",
- "tokio",
- "tokio-test",
- "tracing",
- "tracing-subscriber",
- "uuid",
-]
 
 [[package]]
 name = "potential_utf"
