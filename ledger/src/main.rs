@@ -1,10 +1,10 @@
 use clap::{Parser, ValueEnum};
 use tokio::net::TcpListener;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
+use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt, EnvFilter};
 use std::sync::Arc;
 
-use pcp_ledger::{LedgerAPI, LedgerConfig};
+use physicalcontextprotocol_ledger::{LedgerAPI, LedgerConfig};
 
 #[derive(Parser, Debug)]
 #[command(name = "pcp-ledger")]
@@ -49,13 +49,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     tracing_subscriber::registry()
         .with(tracing_subscriber::fmt::layer())
-        .with(tracing_subscriber::EnvFilter::new(format!(
+        .with(EnvFilter::new(format!(
             "pcp_ledger={},{}",
             log_level,
             if log_level == tracing::Level::DEBUG {
-                "debug"
+                "physicalcontextprotocol_ledger=debug"
             } else {
-                "info"
+                "physicalcontextprotocol_ledger=info"
             }
         )))
         .init();
@@ -132,7 +132,7 @@ async fn handle_request(ledger: &LedgerAPI, request: &str) -> String {
                 let name = parts[2].to_string();
                 let robot_type = parts[3].to_string();
 
-                let registration = pcp_ledger::state::RobotRegistration::new(robot_id, name, robot_type);
+                let registration = physicalcontextprotocol_ledger::RobotRegistration::new(robot_id, name, robot_type);
 
                 match ledger.register_robot(registration).await {
                     Ok(id) => format!("OK:{}", id),

@@ -62,6 +62,19 @@ impl ZoneBounds {
     }
 }
 
+impl Default for ZoneBounds {
+    fn default() -> Self {
+        Self {
+            min_x: 0.0,
+            max_x: 0.0,
+            min_y: 0.0,
+            max_y: 0.0,
+            min_z: 0.0,
+            max_z: 0.0,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FleetSnapshot {
     pub timestamp: DateTime<utc::Utc>,

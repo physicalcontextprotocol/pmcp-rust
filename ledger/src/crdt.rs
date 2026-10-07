@@ -4,12 +4,19 @@ use std::hash::Hash;
 use uuid::Uuid;
 use chrono::{DateTime, Utc};
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct NodeId(pub String);
 
 impl NodeId {
     pub fn new(id: String) -> Self {
         NodeId(id)
+    }
+}
+
+impl Default for NodeId {
+    /// A default node is a fresh replica identity, not a shared sentinel.
+    fn default() -> Self {
+        NodeId(Uuid::new_v4().to_string())
     }
 }
 
@@ -154,44 +161,42 @@ impl RobotState {
         self.metadata.insert(key, value);
         self
     }
-}
 
-pub trait CRDTValue: Clone + Default + Serialize + for<'de> Deserialize<'de> {
-    fn merge(&mut self, other: &Self);
-    fn version(&self) -> &VersionVector;
-    fn version_mut(&mut self) -> &mut VersionVector;
-}
+    fn precedes(&self, other: &RobotState) -> bool {
+        (self.timestamp, &self.node_id) < (other.timestamp, &other.node_id)
+    }
 
-impl CRDTValue for RobotState {
-    fn merge(&mut self, other: &Self) {
-        if self.version.m.concurrent(&other.version) {
-            if other.timestamp > self.timestamp {
-                self.position = other.position.clone();
-                self.orientation = other.orientation.clone();
-                self.velocity = other.velocity.clone();
-                self.timestamp = other.timestamp;
-                self.zone = other.zone.clone();
-                self.metadata.clone_from(&other.metadata);
-            }
-        } else if other.version.happens_before(&self.version) {
+    pub fn merge(&mut self, other: &RobotState) {
+        if other.precedes(self) {
             return;
-        } else {
-            self.position = other.position.clone();
-            self.orientation = other.orientation.clone();
-            self.velocity = other.velocity.clone();
-            self.timestamp = other.timestamp;
-            self.zone = other.zone.clone();
-            self.version.merge(&other.version);
-            self.metadata.clone_from(&other.metadata);
         }
-    }
 
-    fn version(&self) -> &VersionVector {
-        &self.version
+        self.position = other.position.clone();
+        self.orientation = other.orientation.clone();
+        self.velocity = other.velocity.clone();
+        self.zone = other.zone.clone();
+        self.metadata.clone_from(&other.metadata);
+        self.timestamp = other.timestamp;
+        self.node_id = other.node_id.clone();
+        self.version = self.version.max(other.version);
+        self.seq = self.seq.max(other.seq);
     }
+}
 
-    fn version_mut(&mut self) -> &mut VersionVector {
-        &mut self.version
+impl Default for RobotState {
+    fn default() -> Self {
+        Self {
+            robot_id: "default".to_string(),
+            position: Position3D::new(0.0, 0.0, 0.0),
+            orientation: Orientation::identity(),
+            velocity: Velocity3D::new(0.0, 0.0, 0.0, 0.0),
+            timestamp: Utc::now(),
+            zone: "default".to_string(),
+            version: 0,
+            node_id: NodeId::default(),
+            seq: 0,
+            metadata: HashMap::new(),
+        }
     }
 }
 
@@ -240,7 +245,7 @@ impl DeltaMutator {
                 entry.position = position.clone();
                 entry.zone = zone.clone();
                 entry.timestamp = *timestamp;
-                entry.version.increment(node_id);
+                entry.version = entry.version.saturating_add(1);
                 entry.seq += 1;
                 true
             }
@@ -248,7 +253,7 @@ impl DeltaMutator {
                 if let Some(entry) = state.get_mut(robot_id) {
                     entry.velocity = velocity.clone();
                     entry.timestamp = *timestamp;
-                    entry.version.increment(node_id);
+                    entry.version = entry.version.saturating_add(1);
                     entry.seq += 1;
                     true
                 } else {
@@ -259,7 +264,7 @@ impl DeltaMutator {
                 if let Some(entry) = state.get_mut(robot_id) {
                     entry.orientation = orientation.clone();
                     entry.timestamp = *timestamp;
-                    entry.version.increment(node_id);
+                    entry.version = entry.version.saturating_add(1);
                     entry.seq += 1;
                     true
                 } else {
@@ -270,7 +275,7 @@ impl DeltaMutator {
                 if let Some(entry) = state.get_mut(robot_id) {
                     entry.zone = zone.clone();
                     entry.timestamp = *timestamp;
-                    entry.version.increment(node_id);
+                    entry.version = entry.version.saturating_add(1);
                     entry.seq += 1;
                     true
                 } else {
@@ -281,7 +286,7 @@ impl DeltaMutator {
                 if let Some(entry) = state.get_mut(robot_id) {
                     entry.metadata.insert(key.clone(), value.clone());
                     entry.timestamp = *timestamp;
-                    entry.version.increment(node_id);
+                    entry.version = entry.version.saturating_add(1);
                     entry.seq += 1;
                     true
                 } else {

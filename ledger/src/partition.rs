@@ -31,7 +31,7 @@ pub struct ZonePartition {
     pub bounds: ZoneBounds,
     pub shards: Vec<Shard>,
     pub num_shards: u32,
-    pub robots: HashMap<String, String>,
+    pub robots: HashMap<String, u32>,
 }
 
 impl ZonePartition {

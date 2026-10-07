@@ -98,6 +98,9 @@ impl LedgerAPI {
 
         *self.gossip.write().await = Some(gossip);
 
+        let mut metrics = self.metrics.write().await;
+        metrics.total_zones = self.config.num_zones as u64;
+
         Ok(())
     }
 
@@ -231,7 +234,7 @@ impl LedgerAPI {
         let partitions = self.partitions.read().await;
         let zones: Vec<ZoneState> = partitions
             .values()
-            .map(|p| {
+            .map(|p| async {
                 let mut zs = ZoneState::new(p.zone_id.clone(), ZoneBounds::default());
                 for robot_id in p.robots.keys() {
                     if let Some(state) = self.get_robot_state(robot_id).await {
@@ -240,6 +243,9 @@ impl LedgerAPI {
                 }
                 zs
             })
+            .collect::<Vec<_>>()
+            .into_iter()
+            .map(|f| futures::executor::block_on(f))
             .collect();
 
         FleetSnapshot::from_zones(zones)
