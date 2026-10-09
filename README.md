@@ -12,6 +12,17 @@ independent crates:
 This is a **peer** implementation of the same wire format as
 `pmcp-python` and `pmcp-typescript`, not a binding of either.
 
+## Install
+
+The core crate is published on crates.io as **`physicalcontextprotocol`**
+(note: the package name differs from the `pcp-core/` directory name):
+
+```bash
+cargo add physicalcontextprotocol
+```
+
+The ledger crate is **not** published — it does not compile (see status below).
+
 ## Status at a glance
 
 | Crate | Builds? | Tests | Supported? |
