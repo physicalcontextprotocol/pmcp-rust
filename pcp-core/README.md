@@ -59,7 +59,7 @@ cargo test
 
 ## License
 
-Apache-2.0. See [LICENSE](https://github.com/physicalcontextprotocol/pmcp-rust/blob/main/LICENSE).
+Apache-2.0. See [LICENSE](https://github.com/physicalcontextprotocol/pcp-rust/blob/main/LICENSE).
 
 ## Note on the sibling crate
 

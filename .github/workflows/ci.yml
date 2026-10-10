@@ -1,4 +1,4 @@
-name: pmcp-rust CI
+name: pcp-rust CI
 
 # Two crates with very different states, and this workflow is explicit
 # about which is which:
@@ -110,7 +110,7 @@ jobs:
     steps:
       - name: Report status
         run: |
-          echo "## pmcp-rust CI Summary" >> "$GITHUB_STEP_SUMMARY"
+          echo "## pcp-rust CI Summary" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "| Job | Blocking? | Result |" >> "$GITHUB_STEP_SUMMARY"
           echo "|-----|-----------|--------|" >> "$GITHUB_STEP_SUMMARY"

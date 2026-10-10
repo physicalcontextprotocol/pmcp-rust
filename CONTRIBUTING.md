@@ -1,4 +1,4 @@
-# Contributing to pmcp-rust
+# Contributing to pcp-rust
 
 Two independent crates: `pcp-core` (protocol core) and `pcp-ledger`
 (CRDT ledger layer).

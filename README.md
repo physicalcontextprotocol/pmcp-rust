@@ -1,4 +1,4 @@
-# pmcp-rust
+# pcp-rust
 
 Rust implementation of the PCP protocol, split across two
 independent crates:
@@ -10,7 +10,7 @@ independent crates:
   partitioning, storage, RPC/API surface.
 
 This is a **peer** implementation of the same wire format as
-`pmcp-python` and `pmcp-typescript`, not a binding of either.
+`pcp-python` and `pcp-typescript`, not a binding of either.
 
 ## Install
 

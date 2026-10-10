@@ -472,9 +472,9 @@ impl Default for SensorReading {
 // ============================================================================
 
 /// Lease state enumeration
-/// NOTE: values match pmcp-spec/schema/v0.6.0's LeaseState enum exactly
+/// NOTE: values match pcp-spec/schema/v0.6.0's LeaseState enum exactly
 /// (FREE/PENDING/ACTIVE/EXPIRED/DENIED). Earlier code used a non-conformant
-/// "GRANTED" value -- confirmed a drift bug (see pmcp-labs/v04, which
+/// "GRANTED" value -- confirmed a drift bug (see pcp-labs/v04, which
 /// already used ACTIVE), not a deliberate naming choice.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "UPPERCASE")]

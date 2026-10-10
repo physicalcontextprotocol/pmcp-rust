@@ -5,7 +5,7 @@ edition = "2021"
 description = "PCP Distributed Digital Twin Ledger with 4D CRDT"
 authors = ["Sandeep Thummala <physicalcontextprotocol@gmail.com>"]
 license = "Apache-2.0"
-repository = "https://github.com/physicalcontextprotocol/pmcp-rust"
+repository = "https://github.com/physicalcontextprotocol/pcp-rust"
 
 [dependencies]
 tokio = { version = "1.35", features = ["full"] }

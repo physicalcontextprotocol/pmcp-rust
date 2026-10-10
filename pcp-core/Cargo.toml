@@ -5,7 +5,7 @@ edition = "2021"
 description = "PCP Core - Physical Context Protocol Rust implementation"
 authors = ["Sandeep Thummala <physicalcontextprotocol@gmail.com>"]
 license = "Apache-2.0"
-repository = "https://github.com/physicalcontextprotocol/pmcp-rust"
+repository = "https://github.com/physicalcontextprotocol/pcp-rust"
 readme = "README.md"
 
 [dependencies]

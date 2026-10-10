@@ -1,7 +1,7 @@
-# Security policy — pmcp-rust
+# Security policy — pcp-rust
 
 The default policy for this organization lives in
-[`pmcp-spec/SECURITY.md`](https://github.com/physicalcontextprotocol/pmcp-spec/blob/main/SECURITY.md)
+[`pcp-spec/SECURITY.md`](https://github.com/physicalcontextprotocol/pcp-spec/blob/main/SECURITY.md)
 and applies here in full. This file records what is specific to the
 Rust crates.
 
